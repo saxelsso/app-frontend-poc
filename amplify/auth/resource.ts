@@ -1,5 +1,4 @@
 import { defineAuth } from '@aws-amplify/backend';
-import type { DefineAuthProps } from '@aws-amplify/backend/auth';
 
 
 /**
