@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import '@/assets/main.css';
 import { onMounted, ref } from 'vue';
 import type { Schema } from '../../amplify/data/resource';
 import { generateClient } from 'aws-amplify/data';
@@ -27,29 +26,32 @@ function createTodo() {
 }
     
 // fetch todos when the component is mounted
- onMounted(() => {
+onMounted(() => {
   listTodos();
 });
-
 </script>
 
 <template>
-  <main>
-    <h1>My todos</h1>
-    <button @click="createTodo">+ new</button>
-    <ul>
+  <div class="todos-container">
+    <button @click="createTodo">+ Add Todo</button>
+    <ul v-if="todos.length > 0">
       <li 
         v-for="todo in todos" 
         :key="todo.id">
         {{ todo.content }}
       </li>
     </ul>
-    <div>
-      🥳 App successfully hosted. Try creating a new todo.
-      <br />
-      <a href="https://docs.amplify.aws/gen2/start/quickstart/nextjs-pages-router/">
-        Review next steps of this tutorial.
-      </a>
-    </div>
-  </main>
+    <p v-else>No todos yet. Add one!</p>
+  </div>
 </template>
+
+<style scoped>
+.todos-container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+button {
+  margin-bottom: 16px;
+}
+</style>
