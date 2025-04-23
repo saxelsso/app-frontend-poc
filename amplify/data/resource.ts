@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { DataResource } from '@aws-amplify/backend/plugin-types';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -16,7 +17,7 @@ const schema = a.schema({
 
 export type Schema = ClientSchema<typeof schema>;
 
-export const data = defineData({
+export const data: DataResource = defineData({
   schema,
   authorizationModes: {
     defaultAuthorizationMode: "apiKey",
