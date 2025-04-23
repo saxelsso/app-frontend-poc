@@ -1,5 +1,4 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
-import type { DefineDataProps } from '@aws-amplify/backend/data';
 
 
 /*== STEP 1 ===============================================================
