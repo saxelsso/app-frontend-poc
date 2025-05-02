@@ -2,6 +2,14 @@
 import NavBar from './components/NavBar.vue';
 import { Authenticator } from "@aws-amplify/ui-vue";
 import "@aws-amplify/ui-vue/styles.css";
+
+// Define auth services configuration that excludes sign up
+const authServices = {
+  signUp: {
+    isEnabled: false
+  }
+};
+
 </script>
 
 <template>
@@ -9,8 +17,8 @@ import "@aws-amplify/ui-vue/styles.css";
     <NavBar />
     <div class="content-container">
       <main>
-        <authenticator>
-          <template v-slot="{ signOut }">
+        <authenticator :services="authServices">
+        <template v-slot="{ signOut }">
             <RouterView />
             <button @click="signOut">Sign Out</button>
           </template>
