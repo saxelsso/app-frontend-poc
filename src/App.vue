@@ -2,6 +2,8 @@
 import NavBar from './components/NavBar.vue';
 import { Authenticator } from "@aws-amplify/ui-vue";
 import "@aws-amplify/ui-vue/styles.css";
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 
 // Define auth services configuration that excludes sign up
 const authServices = {
@@ -10,6 +12,8 @@ const authServices = {
   }
 };
 
+const route = useRoute();
+const requiresAuth = computed(() => route.meta.requiresAuth === true);
 </script>
 
 <template>
@@ -17,12 +21,19 @@ const authServices = {
     <NavBar />
     <div class="content-container">
       <main>
-        <authenticator :services="authServices">
-        <template v-slot="{ signOut }">
-            <RouterView />
-            <button @click="signOut">Sign Out</button>
-          </template>
-        </authenticator>
+        <!-- For routes that require authentication -->
+        <template v-if="requiresAuth">
+          <authenticator :services="authServices">
+            <template v-slot="{ signOut }">
+              <RouterView />
+              <button @click="signOut">Sign Out</button>
+            </template>
+          </authenticator>
+        </template>
+        <!-- For public routes -->
+        <template v-else>
+          <RouterView />
+        </template>
       </main>
     </div>
   </div>
