@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import NavBar from './components/NavBar.vue';
+import { Authenticator } from "@aws-amplify/ui-vue";
+import "@aws-amplify/ui-vue/styles.css";
 </script>
 
 <template>
@@ -7,7 +9,12 @@ import NavBar from './components/NavBar.vue';
     <NavBar />
     <div class="content-container">
       <main>
-        <RouterView />
+        <authenticator>
+          <template v-slot="{ signOut }">
+            <RouterView />
+            <button @click="signOut">Sign Out</button>
+          </template>
+        </authenticator>
       </main>
     </div>
   </div>
