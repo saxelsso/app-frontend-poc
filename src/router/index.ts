@@ -2,12 +2,22 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue';
 import TodosView from '../views/TodosView.vue';
 import SalesView from '../views/SalesView.vue';
+import LoginView from '../views/LoginView.vue';
+import { getCurrentUser } from 'aws-amplify/auth';
+//import { Auth } from 'aws-amplify';
+
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'home',
     component: HomeView,
+    meta: { requiresAuth: false } // Public route
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginView,
     meta: { requiresAuth: false } // Public route
   },
   {
@@ -30,6 +40,25 @@ const router = createRouter({
   routes
 });
 
-
+// Navigation guard to check authentication for protected routes
+router.beforeEach(async (to, from, next) => {
+  if (to.meta.requiresAuth) {
+    try {
+      // Check if user is authenticated
+      await getCurrentUser();
+      // User is authenticated, proceed to route
+      next();
+    } catch (error) {
+      // User is not authenticated, redirect to login with the intended destination
+      next({ 
+        name: 'login',
+        query: { redirect: to.fullPath }
+      });
+    }
+  } else {
+    // Route doesn't require auth, proceed
+    next();
+  }
+});
 
 export default router;

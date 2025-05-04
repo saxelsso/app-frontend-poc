@@ -1,5 +1,52 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+//import { Auth } from '@aws-amplify/auth';
+import { getCurrentUser } from 'aws-amplify/auth';
+import { signOut } from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
+
+const isAuthenticated = ref(false);
+const router = useRouter();
+
+// Function to check authentication status
+const checkAuth = async () => {
+  try {
+    await getCurrentUser();
+    isAuthenticated.value = true;
+    console.log('User is authenticated');
+  } catch (error) {
+    isAuthenticated.value = false;
+    console.log('User is not authenticated');
+  }
+};
+
+// Check authentication status on component mount
+onMounted(async () => {
+  await checkAuth();
+
+  // Listen for auth events
+  Hub.listen('auth', ({ payload }) => {
+    const { event } = payload;
+    if (event === 'signedIn') {
+      checkAuth();
+    } else if (event === 'signedOut') {
+      isAuthenticated.value = false;
+    }
+  });
+});
+
+
+// Handle sign out
+const handleSignOut = async () => {
+  try {
+    await signOut();
+    isAuthenticated.value = false;
+    router.push('/');
+  } catch (error) {
+    console.error('Error signing out:', error);
+  }
+};
 </script>
 
 <template>
@@ -10,6 +57,14 @@ import { RouterLink } from 'vue-router';
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/todos">Todos</RouterLink>
         <RouterLink to="/sales">Sales</RouterLink>
+
+        <!-- Show login or logout based on authentication status -->
+        <template v-if="isAuthenticated">
+          <a href="#" @click.prevent="handleSignOut" class="auth-link">Sign Out</a>
+        </template>
+        <template v-else>
+          <RouterLink to="/login" class="auth-link">Login</RouterLink>
+        </template>
       </div>
     </div>
   </nav>
