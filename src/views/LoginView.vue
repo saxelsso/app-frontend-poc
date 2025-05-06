@@ -52,8 +52,13 @@ const handleSignIn = () => {
   </div>
 </template>
 
-<style scoped>
+<style>
+:root {
+  --amplify-components-button-primary-background-color: black;
+}
+</style>
 
+<style scoped>
 .login-container {
   max-width: 400px;
   margin: 0 auto;
