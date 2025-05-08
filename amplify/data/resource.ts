@@ -27,7 +27,7 @@ const schema = a.schema({
         .model({
             ticker: a.string(),
             amount: a.integer(),        // Number of shares
-            purchaseDate: a.integer(),  // Store as milliseconds since epoch
+            purchaseDate: a.timestamp(),  // Store as milliseconds since epoch
             purchasePrice: a.float(),   // Price per share as float to handle decimals
         })
         .authorization(allow => [allow.owner()]),
