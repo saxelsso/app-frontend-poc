@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue';
 import TodosView from '../views/TodosView.vue';
 import SalesView from '../views/SalesView.vue';
 import LoginView from '../views/LoginView.vue';
+import PortfolioView from '../views/PortfolioView.vue';
 import { getCurrentUser } from 'aws-amplify/auth';
 //import { Auth } from 'aws-amplify';
 
@@ -31,7 +32,15 @@ const routes: Array<RouteRecordRaw> = [
     name: 'sales',
     component: SalesView,
     meta: { requiresAuth: true } // Protected route
+  },
+  {
+    path: '/portfolio',
+    name: 'portfolio',
+    component: PortfolioView,
+    meta: { requiresAuth: true }
   }
+
+
 ];
 
 

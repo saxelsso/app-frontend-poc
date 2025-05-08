@@ -21,6 +21,17 @@ const schema = a.schema({
       value: a.float(),
     })
     .authorization(allow => [allow.owner()]),
+
+    // New Portfolio model for tracking stock purchases
+    Portfolio: a
+        .model({
+            ticker: a.string(),
+            amount: a.integer(),        // Number of shares
+            purchaseDate: a.datetime(), // Use datetime for storing date with time
+            purchasePrice: a.float(),   // Price per share as float to handle decimals
+        })
+        .authorization(allow => [allow.owner()]),
+
 });
 
 export type Schema = ClientSchema<typeof schema>;
