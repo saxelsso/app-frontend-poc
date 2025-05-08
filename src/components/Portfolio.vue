@@ -18,7 +18,7 @@ const portfolioItems = ref<Array<Schema['Portfolio']["type"]>>([]);
 
 function listPortfolioItems() {
   client.models.Portfolio.observeQuery().subscribe({
-    next: ({ items, isSynced }) => {
+    next: ({ items }) => {
       portfolioItems.value = items;
     },
   });
@@ -48,10 +48,13 @@ function validateForm(): boolean {
 function createPortfolioItem() {
   if (!validateForm()) return;
 
+  // Convert the date string to a JavaScript Date object
+  const dateInMilliseconds = new Date(purchaseDate.value).getTime();
+
   client.models.Portfolio.create({
     ticker: ticker.value,
     amount: amount.value as number,
-    purchaseDate: purchaseDate.value, // Pass the string date directly
+    purchaseDate: dateInMilliseconds, // Pass the milliseconds timestamp
     purchasePrice: purchasePrice.value as number,
   }).then(() => {
     // After creating a new item, update the list
@@ -60,8 +63,14 @@ function createPortfolioItem() {
     resetForm();
     // Hide form
     showForm.value = false;
+
+  }).catch(error => {
+    // Add error handling to see what's going wrong
+    console.error("Error creating portfolio item:", error);
+    formError.value = 'Failed to create portfolio item: ' + error.message;
   });
 }
+
 
 function resetForm() {
   ticker.value = '';
@@ -79,10 +88,11 @@ function toggleForm() {
 }
 
 // Format date for display
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return 'N/A';
-  return new Date(dateString).toLocaleDateString();
+function formatDate(timestamp: number | null | undefined): string {
+  if (!timestamp) return 'N/A';
+  return new Date(timestamp).toLocaleDateString();
 }
+
 
 // Calculate total value
 function calculateTotalValue(item: Schema['Portfolio']["type"]): number {
