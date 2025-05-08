@@ -57,6 +57,8 @@ const handleSignOut = async () => {
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/todos">Todos</RouterLink>
         <RouterLink to="/sales">Sales</RouterLink>
+        <RouterLink to="/portfolio">Portfolio</RouterLink>
+
 
         <!-- Show login or logout based on authentication status -->
         <template v-if="isAuthenticated">
