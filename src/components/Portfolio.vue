@@ -50,13 +50,25 @@ function createPortfolioItem() {
 
   // Convert the date string to a JavaScript Date object
   const dateInMilliseconds = new Date(purchaseDate.value).getTime();
+  console.log('Date in milliseconds type:', typeof dateInMilliseconds, dateInMilliseconds);
+
+  // Add logging to see the values being sent
+  console.log('Creating portfolio item with values:', {
+    ticker: ticker.value,
+    amount: amount.value,
+    purchaseDate: dateInMilliseconds,
+    purchasePrice: purchasePrice.value
+  });
+
 
   client.models.Portfolio.create({
     ticker: ticker.value,
     amount: amount.value as number,
     purchaseDate: dateInMilliseconds, // Pass the milliseconds timestamp
     purchasePrice: purchasePrice.value as number,
-  }).then(() => {
+  }).then((response) => {
+    console.log('Portfolio item created successfully:', response);
+
     // After creating a new item, update the list
     listPortfolioItems();
     // Reset form
