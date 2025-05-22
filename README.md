@@ -1,21 +1,45 @@
-## AWS Amplify Vue.js Starter Template
+# Modern Serverless Application Development
 
-This repository provides a starter template for creating applications using Vue.js and AWS Amplify, emphasizing easy setup for authentication, API, and database capabilities.
+A proof-of-concept showcase demonstrating how to build powerful serverless applications with AI integration — all without traditional server infrastructure.
 
 ## Overview
 
-This template equips you with a foundational Vue application integrated with AWS Amplify, streamlined for scalability and performance. It is ideal for developers looking to jumpstart their project with pre-configured AWS services like Cognito, AppSync, and DynamoDB.
+This application demonstrates how modern development tools can be combined to create powerful serverless applications with AI capabilities. Built with Vue.js and AWS Amplify, this project serves as a reference for developers looking to leverage cloud-native services without managing server infrastructure.
 
-## Features
+## Technology Stack
 
-- **Authentication**: Setup with Amazon Cognito for secure user authentication.
-- **API**: Ready-to-use GraphQL endpoint with AWS AppSync.
-- **Database**: Real-time database powered by Amazon DynamoDB.
+- **Claude Code**: AI-assisted development for faster implementation and problem-solving
+- **AWS Amplify**: Serverless backend with authentication and data storage capabilities
+- **Vue 3**: Modern reactive frontend framework with composition API
+- **GitHub Codespaces**: Cloud development environment for seamless collaboration
+
+## Key Features
+
+- **Authentication**: Secure user authentication via Amazon Cognito
+- **API**: GraphQL endpoint powered by AWS AppSync
+- **Database**: Real-time NoSQL database with Amazon DynamoDB
+- **Serverless Architecture**: No server maintenance or infrastructure management
+- **Automatic Scaling**: Scales based on application load
+- **Cost Efficiency**: Pay-per-use pricing model
+
+## Benefits Over Traditional Development
+
+- No server maintenance or infrastructure management
+- Automatic scaling based on application load
+- Reduced operational costs with pay-per-use model
+- Faster development cycles with AI assistance
+- Enhanced security through managed services
+
+## Development
+
+- Build: `npm run build`
+- Dev server: `npm run dev`
+- Type check: `npm run type-check`
+- Preview build: `npm run preview`
 
 ## Deploying to AWS
 
-For detailed instructions on deploying your application, refer to the [deployment section](https://docs.amplify.aws/vue/start/quickstart/#deploy-a-fullstack-app-to-aws) of our documentation.
-
+For detailed instructions on deploying your application, refer to the [deployment section](https://docs.amplify.aws/vue/start/quickstart/#deploy-a-fullstack-app-to-aws) of the AWS Amplify documentation.
 
 ## Security
 
@@ -23,4 +47,4 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 ## License
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
+This project is licensed under the MIT-0 License. See the LICENSE file.
