@@ -37,6 +37,16 @@ This application demonstrates how modern development tools can be combined to cr
 - Type check: `npm run type-check`
 - Preview build: `npm run preview`
 
+### Environment Variables
+
+This project uses environment variables for configuration. Create a `.env` file in the root directory with the following variables:
+
+```
+VITE_WEATHER_API_KEY=your_weather_api_key_here
+```
+
+A `.env.example` file is provided as a template. You can get a free Weather API key from [weatherapi.com](https://www.weatherapi.com/).
+
 ## Deploying to AWS
 
 For detailed instructions on deploying your application, refer to the [deployment section](https://docs.amplify.aws/vue/start/quickstart/#deploy-a-fullstack-app-to-aws) of the AWS Amplify documentation.

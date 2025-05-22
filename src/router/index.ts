@@ -4,6 +4,7 @@ import TodosView from '../views/TodosView.vue';
 import SalesView from '../views/SalesView.vue';
 import LoginView from '../views/LoginView.vue';
 import PortfolioView from '../views/PortfolioView.vue';
+import WeatherView from '../views/WeatherView.vue';
 import { getCurrentUser } from 'aws-amplify/auth';
 //import { Auth } from 'aws-amplify';
 
@@ -38,8 +39,13 @@ const routes: Array<RouteRecordRaw> = [
     name: 'portfolio',
     component: PortfolioView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/weather',
+    name: 'weather',
+    component: WeatherView,
+    meta: { requiresAuth: false } // Public route
   }
-
 
 ];
 

@@ -55,6 +55,7 @@ const handleSignOut = async () => {
       <div class="nav-logo">App</div>
       <div class="nav-links">
         <RouterLink to="/">Home</RouterLink>
+        <RouterLink to="/weather">Weather</RouterLink>
         <RouterLink to="/todos">Todos</RouterLink>
         <RouterLink to="/sales">Sales</RouterLink>
         <RouterLink to="/portfolio">Portfolio</RouterLink>
