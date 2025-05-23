@@ -73,48 +73,40 @@
             <h2>Benefits Over Traditional Development</h2>
           </v-card-title>
           <v-card-text>
-            <v-list>
-              <v-list-item>
-                <v-list-item-icon>
-                  <v-icon color="primary">mdi-check-circle</v-icon>
-                </v-list-item-icon>
-                <v-list-item-content>
-                  <v-list-item-title>No server maintenance or infrastructure management</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-              <v-list-item>
-                <v-list-item-icon>
-                  <v-icon color="primary">mdi-check-circle</v-icon>
-                </v-list-item-icon>
-                <v-list-item-content>
-                  <v-list-item-title>Automatic scaling based on application load</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-              <v-list-item>
-                <v-list-item-icon>
-                  <v-icon color="primary">mdi-check-circle</v-icon>
-                </v-list-item-icon>
-                <v-list-item-content>
-                  <v-list-item-title>Reduced operational costs with pay-per-use model</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-              <v-list-item>
-                <v-list-item-icon>
-                  <v-icon color="primary">mdi-check-circle</v-icon>
-                </v-list-item-icon>
-                <v-list-item-content>
-                  <v-list-item-title>Faster development cycles with AI assistance</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-              <v-list-item>
-                <v-list-item-icon>
-                  <v-icon color="primary">mdi-check-circle</v-icon>
-                </v-list-item-icon>
-                <v-list-item-content>
-                  <v-list-item-title>Enhanced security through managed services</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list>
+            <v-simple-table>
+              <tbody>
+                <tr>
+                  <td style="width:40px;">
+                    <v-icon color="primary">mdi-check-circle</v-icon>
+                  </td>
+                  <td>No server maintenance or infrastructure management</td>
+                </tr>
+                <tr>
+                  <td>
+                    <v-icon color="primary">mdi-check-circle</v-icon>
+                  </td>
+                  <td>Automatic scaling based on application load</td>
+                </tr>
+                <tr>
+                  <td>
+                    <v-icon color="primary">mdi-check-circle</v-icon>
+                  </td>
+                  <td>Reduced operational costs with pay-per-use model</td>
+                </tr>
+                <tr>
+                  <td>
+                    <v-icon color="primary">mdi-check-circle</v-icon>
+                  </td>
+                  <td>Faster development cycles with AI assistance</td>
+                </tr>
+                <tr>
+                  <td>
+                    <v-icon color="primary">mdi-check-circle</v-icon>
+                  </td>
+                  <td>Enhanced security through managed services</td>
+                </tr>
+              </tbody>
+            </v-simple-table>
           </v-card-text>
         </v-card>
       </v-col>
