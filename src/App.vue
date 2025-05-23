@@ -3,38 +3,16 @@ import NavBar from './components/NavBar.vue';
 </script>
 
 <template>
-  <div class="app">
+  <v-app>
     <NavBar />
-    <div class="content-container">
-      <main>
+    <v-main>
+      <v-container>
         <RouterView />
-      </main>
-    </div>
-  </div>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <style>
-
-
-.app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
-  overflow-x: hidden;
-}
-
-.content-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  overflow-x: hidden;
-}
-
-main {
-  flex: 1;
-  padding: 20px;
-  max-width: 800px;
-  width: 100%;
-}
+/* Vuetify handles the main layout now */
 </style>

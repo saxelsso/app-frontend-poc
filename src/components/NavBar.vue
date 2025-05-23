@@ -51,152 +51,69 @@ const handleSignOut = async () => {
 </script>
 
 <template>
-  <nav class="navbar">
-    <div class="nav-container">
-      <div class="nav-logo">App</div>
+  <v-app-bar color="primary" dark>
+    <v-app-bar-title>App</v-app-bar-title>
+    
+    <v-spacer></v-spacer>
+    
+    <!-- Desktop navigation -->
+    <v-toolbar-items class="hidden-md-and-down">
+      <v-btn text to="/">Home</v-btn>
+      <v-btn text to="/weather">Weather</v-btn>
+      <v-btn text to="/todos">Todos</v-btn>
+      <v-btn text to="/sales">Sales</v-btn>
+      <v-btn text to="/portfolio">Portfolio</v-btn>
       
-      <!-- Mobile menu toggle button -->
-      <div class="menu-toggle" @click="isMobileMenuOpen = !isMobileMenuOpen">
-        <div class="hamburger" :class="{ 'active': isMobileMenuOpen }">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      </div>
+      <template v-if="isAuthenticated">
+        <v-btn text @click="handleSignOut">Sign Out</v-btn>
+      </template>
+      <template v-else>
+        <v-btn text to="/login">Login</v-btn>
+      </template>
+    </v-toolbar-items>
 
-      <!-- Navigation links -->
-      <div class="nav-links" :class="{ 'mobile-open': isMobileMenuOpen }">
-        <RouterLink to="/" @click="isMobileMenuOpen = false">Home</RouterLink>
-        <RouterLink to="/weather" @click="isMobileMenuOpen = false">Weather</RouterLink>
-        <RouterLink to="/todos" @click="isMobileMenuOpen = false">Todos</RouterLink>
-        <RouterLink to="/sales" @click="isMobileMenuOpen = false">Sales</RouterLink>
-        <RouterLink to="/portfolio" @click="isMobileMenuOpen = false">Portfolio</RouterLink>
+    <!-- Mobile navigation -->
+    <v-app-bar-nav-icon 
+      class="hidden-lg-and-up" 
+      @click="isMobileMenuOpen = !isMobileMenuOpen">
+    </v-app-bar-nav-icon>
+  </v-app-bar>
 
-        <!-- Show login or logout based on authentication status -->
-        <template v-if="isAuthenticated">
-          <a href="#" @click.prevent="handleSignOut" class="auth-link">Sign Out</a>
-        </template>
-        <template v-else>
-          <RouterLink to="/login" class="auth-link" @click="isMobileMenuOpen = false">Login</RouterLink>
-        </template>
-      </div>
-    </div>
-  </nav>
+  <!-- Mobile navigation drawer -->
+  <v-navigation-drawer v-model="isMobileMenuOpen" temporary>
+    <v-list>
+      <v-list-item to="/" @click="isMobileMenuOpen = false">
+        <v-list-item-title>Home</v-list-item-title>
+      </v-list-item>
+      <v-list-item to="/weather" @click="isMobileMenuOpen = false">
+        <v-list-item-title>Weather</v-list-item-title>
+      </v-list-item>
+      <v-list-item to="/todos" @click="isMobileMenuOpen = false">
+        <v-list-item-title>Todos</v-list-item-title>
+      </v-list-item>
+      <v-list-item to="/sales" @click="isMobileMenuOpen = false">
+        <v-list-item-title>Sales</v-list-item-title>
+      </v-list-item>
+      <v-list-item to="/portfolio" @click="isMobileMenuOpen = false">
+        <v-list-item-title>Portfolio</v-list-item-title>
+      </v-list-item>
+      
+      <v-divider></v-divider>
+      
+      <template v-if="isAuthenticated">
+        <v-list-item @click="handleSignOut">
+          <v-list-item-title>Sign Out</v-list-item-title>
+        </v-list-item>
+      </template>
+      <template v-else>
+        <v-list-item to="/login" @click="isMobileMenuOpen = false">
+          <v-list-item-title>Login</v-list-item-title>
+        </v-list-item>
+      </template>
+    </v-list>
+  </v-navigation-drawer>
 </template>
 
 <style scoped>
-.navbar {
-  display: flex;
-  justify-content: center;
-  background-color: #1a1a1a;
-  color: white;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.nav-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  height: 60px;
-  max-width: 1000px;
-  width: 100%;
-  position: relative;
-}
-
-.nav-logo {
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.nav-links {
-  display: flex;
-  gap: 20px;
-}
-
-.nav-links a {
-  color: white;
-  text-decoration: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-}
-
-.nav-links a:hover, .nav-links a.router-link-active {
-  background-color: #333;
-}
-
-/* Hamburger menu styles */
-.menu-toggle {
-  display: none;
-  cursor: pointer;
-}
-
-.hamburger {
-  width: 24px;
-  height: 24px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-}
-
-.hamburger span {
-  display: block;
-  height: 2px;
-  width: 100%;
-  background-color: white;
-  transition: all 0.3s ease;
-}
-
-.hamburger.active span:nth-child(1) {
-  transform: translateY(8px) rotate(45deg);
-}
-
-.hamburger.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.hamburger.active span:nth-child(3) {
-  transform: translateY(-8px) rotate(-45deg);
-}
-
-/* Responsive styles */
-@media (max-width: 768px) {
-  .menu-toggle {
-    display: block;
-  }
-  
-  .nav-links {
-    position: absolute;
-    top: 60px;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    background-color: #1a1a1a;
-    padding: 0;
-    gap: 0;
-    height: 0;
-    overflow: hidden;
-    transition: height 0.3s ease;
-    z-index: 10;
-  }
-  
-  .nav-links.mobile-open {
-    height: auto;
-    padding: 10px 0;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .nav-links a {
-    width: 100%;
-    padding: 12px 20px;
-    border-radius: 0;
-    display: block;
-  }
-  
-  .nav-links a:hover, .nav-links a.router-link-active {
-    background-color: #333;
-  }
-}
+/* Vuetify handles all the styling */
 </style>

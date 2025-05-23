@@ -4,13 +4,14 @@ A proof-of-concept showcase demonstrating how to build powerful serverless appli
 
 ## Overview
 
-This application demonstrates how modern development tools can be combined to create powerful serverless applications with AI capabilities. Built with Vue.js and AWS Amplify, this project serves as a reference for developers looking to leverage cloud-native services without managing server infrastructure.
+This application demonstrates how modern development tools can be combined to create powerful serverless applications with AI capabilities. Built with Vue.js, Vuetify, and AWS Amplify, this project serves as a reference for developers looking to leverage cloud-native services without managing server infrastructure.
 
 ## Technology Stack
 
 - **Claude Code**: AI-assisted development for faster implementation and problem-solving
 - **AWS Amplify**: Serverless backend with authentication and data storage capabilities
 - **Vue 3**: Modern reactive frontend framework with composition API
+- **Vuetify**: Material Design component framework for Vue.js with pre-built UI components
 - **GitHub Codespaces**: Cloud development environment for seamless collaboration
 
 ## Key Features
