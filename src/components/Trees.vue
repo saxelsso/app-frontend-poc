@@ -137,7 +137,9 @@ const initMap = async () => {
       container: mapContainer.value,
       style: 'mapbox://styles/mapbox/streets-v11',
       center: [userLocation.value.lng, userLocation.value.lat],
-      zoom: 15
+      zoom: 17,
+      minZoom: 14,  // Roughly 200m view
+      maxZoom: 17   // Roughly 100m view
     });
 
     map.value.on('load', () => {
@@ -156,7 +158,7 @@ const initMap = async () => {
           // Re-center map and update tree data
           map.value.flyTo({
             center: [lng, lat],
-            zoom: 15,
+            zoom: 17,
             duration: 1000
           });
           
@@ -251,7 +253,7 @@ const addTreeDataToMap = () => {
     map.value.on('mouseleave', 'trees-layer', () => {
       map.value.getCanvas().style.cursor = '';
     });
-
+  /*
     // Fit map to show all trees
     if (treeData.value.features && treeData.value.features.length > 0) {
       const bounds = new mapboxgl.default.LngLatBounds();
@@ -268,9 +270,10 @@ const addTreeDataToMap = () => {
       
       map.value.fitBounds(bounds, {
         padding: 50,
-        maxZoom: 17
+        maxZoom: 15,
+        minZoom: 14
       });
-    }
+    } */
 
   } catch (err) {
     console.error('Error adding tree data to map:', err);
