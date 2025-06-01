@@ -4,7 +4,6 @@ import Trees from '../components/Trees.vue';
 
 <template>
   <div>
-    <h1>Tree Map</h1>
     <Trees />
   </div>
 </template>

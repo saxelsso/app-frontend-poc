@@ -121,7 +121,8 @@ const initMap = async () => {
     const mapboxAccessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
     if (!mapboxAccessToken) {
-      throw new Error('Mapbox access token not found. Please set VITE_MAPBOX_ACCESS_TOKEN in your .env file.');
+      error.value = 'Mapbox access token not found. Please set VITE_MAPBOX_ACCESS_TOKEN in your .env file.';
+      return;
     }
 
     // Replace this with your actual Mapbox access token
@@ -312,17 +313,12 @@ onMounted(async () => {
 <template>
   <div class="trees-container">
     <v-card>
-      <v-card-title>
-        <v-icon class="mr-2">mdi-tree</v-icon>
-        Trees Near You
-      </v-card-title>
-      
       <v-card-text>
         <div v-if="loading" class="text-center py-4">
           <v-progress-circular indeterminate color="primary"></v-progress-circular>
           <p class="mt-2">Loading tree data...</p>
         </div>
-        
+
         <div v-else-if="error" class="text-center py-4">
           <v-alert type="error" class="mb-4">
             {{ error }}
@@ -332,31 +328,27 @@ onMounted(async () => {
             Retry
           </v-btn>
         </div>
-        
+
         <div v-else>
           <div v-if="!mapReady" class="text-center py-4">
             <v-progress-circular indeterminate color="primary"></v-progress-circular>
             <p class="mt-2">Initializing map...</p>
           </div>
-          
+
           <!-- Loading indicator for tree data updates -->
           <div v-if="loadingTrees" class="loading-overlay">
             <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
             <span class="ml-2">Loading trees...</span>
           </div>
-          
-          <div 
-            ref="mapContainer" 
-            class="map-container"
-            style="width: 100%; height: 500px;"
-            :style="{ visibility: mapReady ? 'visible' : 'hidden' }"
+
+          <div
+              ref="mapContainer"
+              class="map-container"
+              style="width: 100%; height: 500px;"
+              :style="{ visibility: mapReady ? 'visible' : 'hidden' }"
           ></div>
-          
+
           <div class="mt-4">
-            <v-alert type="info" variant="outlined" class="mb-3">
-              Click anywhere on the map to search for trees at that location
-            </v-alert>
-            
             <v-chip-group>
               <v-chip color="success" variant="outlined">
                 <v-icon start>mdi-tree</v-icon>
@@ -381,6 +373,8 @@ onMounted(async () => {
     </v-card>
   </div>
 </template>
+
+
 
 <style scoped>
 .trees-container {
