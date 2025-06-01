@@ -52,7 +52,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/trees',
     name: 'trees',
     component: TreeView,
-    meta: { requiresAuth: false } // Protected route
+    meta: { requiresAuth: true } // Protected route
   }
 
 ];

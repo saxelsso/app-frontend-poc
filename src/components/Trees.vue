@@ -29,6 +29,10 @@ const loadingTrees = ref(false); // New loading state for tree data updates
 let mapboxgl: any = null;
 let userLocationMarker: any = null; // Store user location marker reference
 
+const reloadPage = () => {
+  (window as any).location.reload();
+};
+
 // Get user's current position
 const getCurrentPosition = (): Promise<{ lat: number; lng: number }> => {
   return new Promise((resolve, reject) => {
@@ -72,10 +76,8 @@ const fetchTreeData = async (lat: number, lng: number): Promise<TreeData> => {
 const updateTreeDataForLocation = async (lat: number, lng: number) => {
   try {
     loadingTrees.value = true;
-    
-    // Fetch new tree data
-    const newTreeData = await fetchTreeData(lat, lng);
-    treeData.value = newTreeData;
+
+    treeData.value = await fetchTreeData(lat, lng);
     
     // Update current center
     currentCenter.value = { lat, lng };
@@ -323,7 +325,7 @@ onMounted(async () => {
             {{ error }}
           </v-alert>
           <p>Please enable location services and try again.</p>
-          <v-btn @click="location.reload()" color="primary" class="mt-2">
+          <v-btn @click="reloadPage" color="primary" class="mt-2">
             Retry
           </v-btn>
         </div>
