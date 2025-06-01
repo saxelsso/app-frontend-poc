@@ -1,3 +1,4 @@
+
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import TodosView from '../views/TodosView.vue';
@@ -5,6 +6,7 @@ import SalesView from '../views/SalesView.vue';
 import LoginView from '../views/LoginView.vue';
 import PortfolioView from '../views/PortfolioView.vue';
 import WeatherView from '../views/WeatherView.vue';
+import TreeView from '../views/TreeView.vue';
 import { getCurrentUser } from 'aws-amplify/auth';
 //import { Auth } from 'aws-amplify';
 
@@ -45,6 +47,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'weather',
     component: WeatherView,
     meta: { requiresAuth: false } // Public route
+  },
+  {
+    path: '/trees',
+    name: 'trees',
+    component: TreeView,
+    meta: { requiresAuth: false } // Protected route
   }
 
 ];
@@ -65,7 +73,7 @@ router.beforeEach(async (to, from, next) => {
       next();
     } catch (error) {
       // User is not authenticated, redirect to login with the intended destination
-      next({ 
+      next({
         name: 'login',
         query: { redirect: to.fullPath }
       });

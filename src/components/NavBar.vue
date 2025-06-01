@@ -63,6 +63,7 @@ const handleSignOut = async () => {
       <v-btn text to="/todos">Todos</v-btn>
       <v-btn text to="/sales">Sales</v-btn>
       <v-btn text to="/portfolio">Portfolio</v-btn>
+      <v-btn text to="/trees">Trees</v-btn>
       
       <template v-if="isAuthenticated">
         <v-btn text @click="handleSignOut">Sign Out</v-btn>
@@ -96,6 +97,9 @@ const handleSignOut = async () => {
       </v-list-item>
       <v-list-item to="/portfolio" @click="isMobileMenuOpen = false">
         <v-list-item-title>Portfolio</v-list-item-title>
+      </v-list-item>
+      <v-list-item to="/trees" @click="isMobileMenuOpen = false">
+        <v-list-item-title>Trees</v-list-item-title>
       </v-list-item>
       
       <v-divider></v-divider>
