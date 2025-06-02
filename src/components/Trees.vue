@@ -62,7 +62,13 @@ const getCurrentPosition = (): Promise<{ lat: number; lng: number }> => {
 
 // Fetch tree data from the API
 const fetchTreeData = async (lat: number, lng: number): Promise<TreeData> => {
-  const url = `https://api.finurlig.ai/points?lat=${lat}&lon=${lng}`;
+  const baseUrl = import.meta.env.VITE_TREE_API_BASE_URL;
+
+  if (!baseUrl) {
+    throw new Error('API base URL is not configured');
+  }
+
+  const url = `${baseUrl}/points?lat=${lat}&lon=${lng}`;
   
   const response = await fetch(url);
   if (!response.ok) {
