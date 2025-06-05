@@ -16,18 +16,19 @@ interface TreeData {
   }>;
 }
 
-
 const mapContainer = ref<HTMLDivElement>();
 const map = ref<any>(null);
 const userLocation = ref<{ lat: number; lng: number } | null>(null);
-const currentCenter = ref<{ lat: number; lng: number } | null>(null); // Track current map center
+const currentCenter = ref<{ lat: number; lng: number } | null>(null);
 const treeData = ref<TreeData | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const mapReady = ref(false);
-const loadingTrees = ref(false); // New loading state for tree data updates
+const loadingTrees = ref(false);
+const isTrackingLocation = ref(false); // Track if location tracking is active
 let mapboxgl: any = null;
-let userLocationMarker: any = null; // Store user location marker reference
+let userLocationMarker: any = null;
+let geolocateControl: any = null; // Store reference to geolocation control
 
 const reloadPage = () => {
   (window as any).location.reload();
@@ -107,6 +108,20 @@ const updateTreeDataForLocation = async (lat: number, lng: number) => {
   }
 };
 
+// Toggle location tracking
+const toggleLocationTracking = () => {
+  if (!geolocateControl) return;
+  
+  if (isTrackingLocation.value) {
+    // Stop tracking
+    geolocateControl.trigger();
+    isTrackingLocation.value = false;
+  } else {
+    // Start tracking
+    geolocateControl.trigger();
+  }
+};
+
 // Initialize the map
 const initMap = async () => {
   try {
@@ -147,6 +162,49 @@ const initMap = async () => {
       zoom: 17,
       minZoom: 14,  // Roughly 200m view
       maxZoom: 17   // Roughly 100m view
+    });
+
+    // Add geolocate control for real-time location tracking
+    geolocateControl = new mapboxgl.default.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true,
+        timeout: 6000,
+        maximumAge: 0
+      },
+      trackUserLocation: true, // Enable real-time tracking
+      showUserHeading: true,   // Show direction/heading
+      showAccuracyCircle: true, // Show accuracy circle
+      showUserLocation: true
+
+    });
+
+    // Add the control to the map
+    map.value.addControl(geolocateControl, 'top-right');
+
+    // Listen for geolocate events
+    geolocateControl.on('geolocate', (e: any) => {
+      const { latitude, longitude, heading } = e.coords;
+      console.log('User location updated:', { latitude, longitude, heading });
+      
+      // Update user location
+      userLocation.value = { lat: latitude, lng: longitude };
+      
+      // Optionally update tree data when user moves significantly
+      // You can add distance calculation here if needed
+    });
+
+    geolocateControl.on('trackuserlocationstart', () => {
+      isTrackingLocation.value = true;
+      console.log('Location tracking started');
+    });
+
+    geolocateControl.on('trackuserlocationend', () => {
+      isTrackingLocation.value = false;
+      console.log('Location tracking ended');
+    });
+
+    geolocateControl.on('error', (error: any) => {
+      console.error('Geolocation error:', error);
     });
 
     map.value.on('load', () => {
@@ -211,19 +269,7 @@ const addTreeDataToMap = () => {
       }
     });
 
-    // Add user location marker only once (using the imported mapboxgl)
-    if (userLocation.value && !userLocationMarker) {
-      userLocationMarker = new mapboxgl.default.Marker({ 
-        color: '#FF5722',
-        scale: 1.2
-      })
-        .setLngLat([userLocation.value.lng, userLocation.value.lat])
-        .setPopup(
-          new mapboxgl.default.Popup({ offset: 25 })
-            .setHTML('<h3>Your Original Location</h3>')
-        )
-        .addTo(map.value);
-    }
+    // Note: Removed the custom user location marker since we're using Mapbox's built-in geolocation control
 
     // Add click event for tree points
     map.value.on('click', 'trees-layer', (e: any) => {
@@ -260,27 +306,6 @@ const addTreeDataToMap = () => {
     map.value.on('mouseleave', 'trees-layer', () => {
       map.value.getCanvas().style.cursor = '';
     });
-  /*
-    // Fit map to show all trees
-    if (treeData.value.features && treeData.value.features.length > 0) {
-      const bounds = new mapboxgl.default.LngLatBounds();
-      
-      // Add current center to bounds
-      if (currentCenter.value) {
-        bounds.extend([currentCenter.value.lng, currentCenter.value.lat]);
-      }
-      
-      // Add all tree coordinates to bounds
-      treeData.value.features.forEach((feature: any) => {
-        bounds.extend(feature.geometry.coordinates);
-      });
-      
-      map.value.fitBounds(bounds, {
-        padding: 50,
-        maxZoom: 15,
-        minZoom: 14
-      });
-    } */
 
   } catch (err) {
     console.error('Error adding tree data to map:', err);
@@ -364,9 +389,13 @@ onMounted(async () => {
                 <v-icon start>mdi-map-marker</v-icon>
                 Current: {{ currentCenter.lat.toFixed(4) }}, {{ currentCenter.lng.toFixed(4) }}
               </v-chip>
-              <v-chip color="warning" variant="outlined" v-if="userLocation">
-                <v-icon start>mdi-crosshairs-gps</v-icon>
-                Original: {{ userLocation.lat.toFixed(4) }}, {{ userLocation.lng.toFixed(4) }}
+              <v-chip 
+                :color="isTrackingLocation ? 'success' : 'warning'" 
+                variant="outlined" 
+                v-if="userLocation"
+              >
+                <v-icon start>{{ isTrackingLocation ? 'mdi-crosshairs-gps' : 'mdi-map-marker-outline' }}</v-icon>
+                {{ isTrackingLocation ? 'Tracking Live' : 'Original' }}: {{ userLocation.lat.toFixed(4) }}, {{ userLocation.lng.toFixed(4) }}
               </v-chip>
               <v-chip color="info" variant="outlined" v-if="treeData?.features?.length">
                 <v-icon start>mdi-map-search</v-icon>
@@ -379,8 +408,6 @@ onMounted(async () => {
     </v-card>
   </div>
 </template>
-
-
 
 <style scoped>
 .trees-container {
@@ -407,5 +434,23 @@ onMounted(async () => {
   align-items: center;
   z-index: 1000;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Style for the geolocation control (optional customization) */
+:deep(.mapboxgl-ctrl-geolocate) {
+  background-color: #ffffff;
+  border: 2px solid #ddd;
+}
+
+:deep(.mapboxgl-ctrl-geolocate:hover) {
+  background-color: #f8f9fa;
+}
+
+:deep(.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-active) {
+  background-color: #007bff;
+}
+
+:deep(.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-active .mapboxgl-ctrl-icon) {
+  color: white;
 }
 </style>
