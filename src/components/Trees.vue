@@ -30,6 +30,14 @@ let mapboxgl: any = null;
 let userLocationMarker: any = null;
 let geolocateControl: any = null; // Store reference to geolocation control
 
+const drawingPolygon = ref(false); // Drawing mode state
+const polygonPoints = ref<Array<[number, number]>>([]); // Polygon coordinates
+const polygonLayerId = 'drawn-polygon-layer';
+const polygonSourceId = 'drawn-polygon-source';
+const submittingPolygon = ref(false);
+const polygonSubmitError = ref<string|null>(null);
+const polygonSubmitSuccess = ref(false);
+
 const reloadPage = () => {
   (window as any).location.reload();
 };
@@ -119,6 +127,112 @@ const toggleLocationTracking = () => {
   } else {
     // Start tracking
     geolocateControl.trigger();
+  }
+};
+
+// Start drawing mode
+const startPolygonDrawing = () => {
+  drawingPolygon.value = true;
+  polygonPoints.value = [];
+  polygonSubmitError.value = null;
+  polygonSubmitSuccess.value = false;
+  // Remove previous polygon if exists
+  if (map.value && map.value.getLayer(polygonLayerId)) {
+    map.value.removeLayer(polygonLayerId);
+  }
+  if (map.value && map.value.getSource(polygonSourceId)) {
+    map.value.removeSource(polygonSourceId);
+  }
+};
+
+// Clear polygon drawing
+const clearPolygonDrawing = () => {
+  polygonPoints.value = [];
+  drawingPolygon.value = false;
+  polygonSubmitError.value = null;
+  polygonSubmitSuccess.value = false;
+  if (map.value && map.value.getLayer(polygonLayerId)) {
+    map.value.removeLayer(polygonLayerId);
+  }
+  if (map.value && map.value.getSource(polygonSourceId)) {
+    map.value.removeSource(polygonSourceId);
+  }
+};
+
+// Add polygon to map
+const updatePolygonOnMap = () => {
+  if (!map.value) return;
+  // Remove previous
+  if (map.value.getLayer(polygonLayerId)) {
+    map.value.removeLayer(polygonLayerId);
+  }
+  if (map.value.getSource(polygonSourceId)) {
+    map.value.removeSource(polygonSourceId);
+  }
+  if (polygonPoints.value.length < 2) return;
+  // Build GeoJSON
+  const coords = [...polygonPoints.value];
+  if (coords.length > 2) coords.push(coords[0]); // Close polygon for fill
+  map.value.addSource(polygonSourceId, {
+    type: 'geojson',
+    data: {
+      type: 'Feature',
+      geometry: {
+        type: coords.length > 3 ? 'Polygon' : 'LineString',
+        coordinates: coords.length > 3 ? [coords] : coords
+      },
+      properties: {}
+    }
+  });
+  map.value.addLayer({
+    id: polygonLayerId,
+    type: coords.length > 3 ? 'fill' : 'line',
+    source: polygonSourceId,
+    paint: coords.length > 3 ? {
+      'fill-color': '#1976D2',
+      'fill-opacity': 0.2,
+      'fill-outline-color': '#1976D2'
+    } : {
+      'line-color': '#1976D2',
+      'line-width': 3
+    }
+  });
+};
+
+// Submit polygon to API
+const submitPolygon = async () => {
+  if (polygonPoints.value.length < 3) {
+    polygonSubmitError.value = 'Polygon must have at least 3 points.';
+    return;
+  }
+  submittingPolygon.value = true;
+  polygonSubmitError.value = null;
+  polygonSubmitSuccess.value = false;
+  // Build GeoJSON
+  const coords = [...polygonPoints.value, polygonPoints.value[0]];
+  const geojson = {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [coords]
+    },
+    properties: {}
+  };
+  try {
+    const apiUrl = import.meta.env.VITE_POLYGON_API_URL;
+    if (!apiUrl) throw new Error('Polygon API URL not configured');
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(geojson)
+    });
+    if (!res.ok) throw new Error('API error: ' + res.statusText);
+    polygonSubmitSuccess.value = true;
+    clearPolygonDrawing();
+  } catch (err: any) {
+    polygonSubmitError.value = err.message || 'Failed to submit polygon.';
+  } finally {
+    submittingPolygon.value = false;
   }
 };
 
@@ -213,22 +327,34 @@ const initMap = async () => {
       
       // Add click event listener for map clicks (not on tree points)
       map.value.on('click', (e: any) => {
-        // Check if click was on a tree layer feature
-        const features = map.value.queryRenderedFeatures(e.point, { layers: ['trees-layer'] });
-        
-        // Only proceed if click was NOT on a tree point
-        if (features.length === 0) {
-          const { lng, lat } = e.lngLat;
+        if (!drawingPolygon.value) {
+          // Check if click was on a tree layer feature
+          const features = map.value.queryRenderedFeatures(e.point, { layers: ['trees-layer'] });
           
-          // Re-center map and update tree data
-          map.value.flyTo({
-            center: [lng, lat],
-            zoom: 17,
-            duration: 1000
-          });
-          
-          // Update tree data for the new location
-          updateTreeDataForLocation(lat, lng);
+          // Only proceed if click was NOT on a tree point
+          if (features.length === 0) {
+            const { lng, lat } = e.lngLat;
+            
+            // Re-center map and update tree data
+            map.value.flyTo({
+              center: [lng, lat],
+              zoom: 17,
+              duration: 1000
+            });
+            
+            // Update tree data for the new location
+            updateTreeDataForLocation(lat, lng);
+          }
+        } else {
+          // Add point to polygon
+          polygonPoints.value.push([e.lngLat.lng, e.lngLat.lat]);
+          updatePolygonOnMap();
+        }
+      });
+      // Double click to submit polygon
+      map.value.on('dblclick', (e: any) => {
+        if (drawingPolygon.value && polygonPoints.value.length >= 3) {
+          submitPolygon();
         }
       });
     });
@@ -402,6 +528,24 @@ onMounted(async () => {
                 200m radius
               </v-chip>
             </v-chip-group>
+          </div>
+
+          <div v-if="drawingPolygon" class="mb-2">
+            <v-chip color="info" class="mr-2">Drawing Polygon: Click to add points, double-click to submit</v-chip>
+            <v-btn size="small" color="error" @click="clearPolygonDrawing" :disabled="submittingPolygon">Cancel</v-btn>
+          </div>
+          <div v-if="submittingPolygon" class="mb-2">
+            <v-progress-circular indeterminate color="primary" size="20"></v-progress-circular>
+            <span class="ml-2">Submitting polygon...</span>
+          </div>
+          <div v-if="polygonSubmitError" class="mb-2">
+            <v-alert type="error">{{ polygonSubmitError }}</v-alert>
+          </div>
+          <div v-if="polygonSubmitSuccess" class="mb-2">
+            <v-alert type="success">Polygon submitted successfully!</v-alert>
+          </div>
+          <div v-if="!drawingPolygon">
+            <v-btn color="primary" class="mb-2" @click="startPolygonDrawing">Draw Polygon</v-btn>
           </div>
         </div>
       </v-card-text>
