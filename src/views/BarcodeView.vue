@@ -18,7 +18,9 @@ const startScanner = async () => {
     await nextTick(); // Wait for DOM updates
 
     if (!scannerContainer.value) {
-      throw new Error('Scanner container not found');
+      errorMessage.value = 'Scanner container not found';
+      isScanning.value = false;
+      return; // Early return instead of throwing
     }
 
     const config: QuaggaJSConfigObject = {
@@ -40,15 +42,15 @@ const startScanner = async () => {
       numOfWorkers: 2,
       decoder: {
         readers: [
-          { format: "code_128", config: {} },
-          { format: "ean", config: {} },
-          { format: "ean_8", config: {} },
-          { format: "code_39", config: {} },
-          { format: "code_39_vin", config: {} },
-          { format: "codabar", config: {} },
-          { format: "upc", config: {} },
-          { format: "upc_e", config: {} },
-          { format: "i2of5", config: {} }
+          { format: "code_128", config: { supplements: [] } },
+          { format: "ean", config: { supplements: [] } },
+          { format: "ean_8", config: { supplements: [] } },
+          { format: "code_39", config: { supplements: [] } },
+          { format: "code_39_vin", config: { supplements: [] } },
+          { format: "codabar", config: { supplements: [] } },
+          { format: "upc", config: { supplements: [] } },
+          { format: "upc_e", config: { supplements: [] } },
+          { format: "i2of5", config: { supplements: [] } }
         ]
       },
       locate: true
