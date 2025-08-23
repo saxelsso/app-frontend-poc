@@ -38,6 +38,8 @@ const schema = a.schema({
             productId: a.string().required(),
             productName: a.string().required(),
             listPrice: a.float().required(),
+            inventory: a.hasMany('Inventory', 'productId'),
+            orderItems: a.hasMany('OrderItem', 'productId'),
         })
         .authorization(allow => [allow.owner()])
         .identifier(['productId']), // Makes productId the primary key instead of auto-generated id
