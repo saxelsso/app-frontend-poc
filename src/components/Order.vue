@@ -289,7 +289,7 @@ async function submitOrder() {
           v-for="(l, idx) in lines"
           :key="idx"
       >
-        <div class="field">
+        <div class="field product-field">
           <label>Product</label>
           <select v-model="l.productId">
             <option value="">Select a product</option>
@@ -304,34 +304,36 @@ async function submitOrder() {
               Stock: {{ stockByProductId.get(p.productId) ?? 0 }}
             </option>
           </select>
-
         </div>
 
-        <div class="field qty">
-          <label>Quantity</label>
-          <input
-              v-model.number="l.quantity"
-              type="number"
-              min="1"
-              step="1"
-              placeholder="Qty"
-          />
-        </div>
-
-        <div class="field subtotal">
-          <label>Subtotal</label>
-          <div class="subtotal-value">
-            €{{ lineSubtotals[idx].toFixed(2) }}
+        <div class="qty-subtotal-row">
+          <div class="field qty">
+            <label>Quantity</label>
+            <input
+                v-model.number="l.quantity"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="Qty"
+            />
           </div>
-        </div>
 
-        <button
-            class="remove-btn"
-            v-if="lines.length > 1"
-            @click="removeLine(idx)"
-        >
-          Remove
-        </button>
+          <div class="field subtotal">
+            <label>Subtotal</label>
+            <div class="subtotal-value">
+              €{{ lineSubtotals[idx].toFixed(2) }}
+            </div>
+          </div>
+
+          <button
+              class="remove-btn"
+              v-if="lines.length > 1"
+              @click="removeLine(idx)"
+              title="Remove item"
+          >
+            ×
+          </button>
+        </div>
       </div>
     </div>
 
@@ -377,14 +379,24 @@ async function submitOrder() {
 }
 
 .line {
-  display: grid;
-  grid-template-columns: 1.4fr 0.6fr 0.6fr auto;
-  gap: 8px;
-  align-items: end;
   background: #fff;
   padding: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-field {
+  width: 100%;
+}
+
+.qty-subtotal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
 }
 
 .field {
@@ -393,8 +405,17 @@ async function submitOrder() {
   gap: 6px;
 }
 
+.field select,
+.field input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 .qty input {
-  max-width: 140px;
+  min-width: 0; /* Allow input to shrink */
 }
 
 .subtotal {
@@ -406,10 +427,28 @@ async function submitOrder() {
   padding: 8px 12px;
   background: #f3f4f6;
   border-radius: 4px;
+  font-weight: 500;
+  text-align: right;
 }
 
 .remove-btn {
   height: 36px;
+  width: 36px;
+  border-radius: 4px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.remove-btn:hover {
+  background-color: #dc2626;
 }
 
 .actions {
@@ -445,9 +484,61 @@ async function submitOrder() {
 .submit-btn {
   background-color: #4a5568;
   color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .reset-btn {
   background-color: #e5e7eb;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  .sell-container {
+    padding: 12px;
+  }
+
+  .line {
+    padding: 8px;
+  }
+
+  .qty-subtotal-row {
+    grid-template-columns: 80px 1fr auto;
+    gap: 6px;
+  }
+
+  .field select,
+  .field input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 6px 8px;
+  }
+
+  .subtotal-value {
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+
+  .remove-btn {
+    height: 32px;
+    width: 32px;
+    font-size: 16px;
+  }
+
+  .submit {
+    flex-direction: column;
+  }
+
+  .submit-btn,
+  .reset-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+  }
 }
 </style>
