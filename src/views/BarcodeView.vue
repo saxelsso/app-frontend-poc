@@ -1,7 +1,6 @@
-
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
-import Quagga from 'quagga';
+import Quagga from '@ericblade/quagga2';
 
 const isScanning = ref(false);
 const scannedData = ref<string>('');
@@ -24,17 +23,17 @@ const startScanner = async () => {
     const config = {
       inputStream: {
         name: "Live",
-        type: "LiveStream",
+        type: "LiveStream" as const,
         target: scannerContainer.value,
         constraints: {
           width: { min: 640, ideal: 1280 },
           height: { min: 480, ideal: 720 },
-          facingMode: "environment", // Use back camera
+          facingMode: "environment" as const, // Use back camera
           aspectRatio: { min: 1, max: 2 }
         }
       },
       locator: {
-        patchSize: "medium",
+        patchSize: "medium" as const,
         halfSample: true
       },
       numOfWorkers: 2,
@@ -102,11 +101,31 @@ const resetScanner = () => {
 
 // Check if the device supports camera
 const checkCameraSupport = () => {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  if (typeof window !== 'undefined' &&
+      (!window.navigator?.mediaDevices || !window.navigator?.mediaDevices?.getUserMedia)) {
     errorMessage.value = 'Camera is not supported on this device';
     return false;
   }
   return true;
+};
+
+// Copy to clipboard function
+const copyToClipboard = async () => {
+  try {
+    if (typeof window !== 'undefined' && window.navigator?.clipboard) {
+      await window.navigator.clipboard.writeText(scannedData.value);
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = scannedData.value;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error);
+  }
 };
 
 onMounted(() => {
@@ -208,7 +227,7 @@ onUnmounted(() => {
               <!-- Additional actions -->
               <div class="mt-4">
                 <v-btn
-                    @click="navigator.clipboard?.writeText(scannedData)"
+                    @click="copyToClipboard"
                     color="primary"
                     variant="outlined"
                     class="me-2"
