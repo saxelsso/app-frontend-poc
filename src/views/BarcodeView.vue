@@ -235,68 +235,6 @@ onUnmounted(() => {
       </v-card-title>
 
       <v-card-text>
-        <!-- Debug Panel Toggle -->
-        <div class="mb-4">
-          <v-btn
-              @click="showDebugPanel = !showDebugPanel"
-              color="info"
-              variant="outlined"
-              size="small"
-          >
-            <v-icon class="me-2">mdi-bug</v-icon>
-            {{ showDebugPanel ? 'Hide' : 'Show' }} Debug Info
-          </v-btn>
-          <v-btn
-              v-if="showDebugPanel"
-              @click="testCameraPermissions"
-              color="warning"
-              variant="outlined"
-              size="small"
-              class="ml-2"
-          >
-            <v-icon class="me-2">mdi-camera-check</v-icon>
-            Test Camera
-          </v-btn>
-        </div>
-
-        <!-- Debug Panel -->
-        <v-card
-            v-if="showDebugPanel"
-            variant="outlined"
-            class="mb-4"
-        >
-          <v-card-title class="text-h6 d-flex align-center">
-            <v-icon class="me-2">mdi-console</v-icon>
-            Debug Messages
-            <v-spacer></v-spacer>
-            <v-btn
-                @click="clearDebugMessages"
-                color="error"
-                variant="text"
-                size="small"
-            >
-              Clear
-            </v-btn>
-          </v-card-title>
-          <v-card-text>
-            <div class="debug-messages">
-              <div
-                  v-for="(message, index) in debugMessages"
-                  :key="index"
-                  class="debug-message"
-                  :class="{ 
-                    'error-message': message.includes('ERROR'),
-                    'success-message': message.includes('DETECTED') || message.includes('OK')
-                  }"
-              >
-                {{ message }}
-              </div>
-              <div v-if="debugMessages.length === 0" class="text-grey">
-                No debug messages yet...
-              </div>
-            </div>
-          </v-card-text>
-        </v-card>
 
         <!-- Scanner Container -->
         <div v-if="!scannedData" class="scanner-section">
@@ -440,8 +378,73 @@ onUnmounted(() => {
             </v-expansion-panel-text>
           </v-expansion-panel>
         </v-expansion-panels>
+
+      <!-- Debug Panel (moved inside main card and matched width to scanner) -->
+      <v-card
+          variant="outlined"
+          class="mt-6 debug-panel mx-auto"
+      >
+        <v-card-title class="text-h6 d-flex align-center">
+          <v-icon class="me-2">mdi-console</v-icon>
+          Debug
+          <v-spacer></v-spacer>
+          <v-btn
+              color="info"
+              variant="outlined"
+              size="small"
+              class="me-2"
+              @click="showDebugPanel = !showDebugPanel"
+          >
+            <v-icon class="me-2">mdi-bug</v-icon>
+            {{ showDebugPanel ? 'Hide' : 'Show' }}
+          </v-btn>
+          <v-btn
+              color="warning"
+              variant="outlined"
+              size="small"
+              class="me-2"
+              @click="testCameraPermissions"
+          >
+            <v-icon class="me-2">mdi-camera-check</v-icon>
+            Test Camera
+          </v-btn>
+          <v-btn
+              color="error"
+              variant="text"
+              size="small"
+              @click="clearDebugMessages"
+          >
+            Clear
+          </v-btn>
+        </v-card-title>
+
+        <v-expand-transition>
+          <div v-show="showDebugPanel">
+            <v-divider></v-divider>
+            <v-card-text>
+              <div class="debug-messages">
+                <div
+                    v-for="(message, index) in debugMessages"
+                    :key="index"
+                    class="debug-message"
+                    :class="{
+                        'error-message': message.includes('ERROR'),
+                        'success-message': message.includes('DETECTED') || message.includes('OK')
+                      }"
+                >
+                  {{ message }}
+                </div>
+                <div v-if="debugMessages.length === 0" class="text-grey">
+                  No debug messages yet...
+                </div>
+              </div>
+            </v-card-text>
+          </div>
+        </v-expand-transition>
+      </v-card>
       </v-card-text>
     </v-card>
+
   </div>
 </template>
 
