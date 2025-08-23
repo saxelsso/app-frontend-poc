@@ -106,6 +106,13 @@ function startEdit(product: Schema['Product']["type"]) {
   listPrice.value = product.listPrice || null;
 
   showForm.value = true;
+
+  // Scroll to top to show the edit form
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
 }
 
 function handleSave() {
