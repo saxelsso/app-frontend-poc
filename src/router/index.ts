@@ -9,6 +9,8 @@ import WeatherView from '../views/WeatherView.vue';
 import TreeView from '../views/TreeView.vue';
 import BarcodeView from '../views/BarcodeView.vue';
 import ProductView from '../views/ProductView.vue';
+import InventoryView from '../views/InventoryView.vue';
+import OrderView from '../views/OrderView.vue';
 import { getCurrentUser } from 'aws-amplify/auth';
 //import { Auth } from 'aws-amplify';
 
@@ -67,8 +69,19 @@ const routes: Array<RouteRecordRaw> = [
         name: 'product',
         component: ProductView,
         meta: { requiresAuth: true } // Public route - you can change this to true if you want it protected
-    }
-
+    },
+    {
+        path: '/inventory',
+        name: 'inventory',
+        component: InventoryView,
+        meta: { requiresAuth: true } // Public route - you can change this to true if you want it protected
+    },
+    {
+        path: '/order',
+        name: 'Order',
+        component: OrderView,
+        meta: { requiresAuth: true } // Public route - you can change this to true if you want it protected
+    },
 ];
 
 
