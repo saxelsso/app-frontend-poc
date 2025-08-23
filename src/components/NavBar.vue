@@ -64,7 +64,8 @@ const handleSignOut = async () => {
       <v-btn text to="/sales">Sales</v-btn>
       <v-btn text to="/portfolio">Portfolio</v-btn>
       <v-btn text to="/trees">Trees</v-btn>
-      
+      <v-btn text to="/barcode">Barcode</v-btn>
+
       <template v-if="isAuthenticated">
         <v-btn text @click="handleSignOut">Sign Out</v-btn>
       </template>
