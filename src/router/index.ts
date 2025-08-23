@@ -8,6 +8,7 @@ import PortfolioView from '../views/PortfolioView.vue';
 import WeatherView from '../views/WeatherView.vue';
 import TreeView from '../views/TreeView.vue';
 import BarcodeView from '../views/BarcodeView.vue';
+import ProductView from '../views/ProductView.vue';
 import { getCurrentUser } from 'aws-amplify/auth';
 //import { Auth } from 'aws-amplify';
 
@@ -60,8 +61,13 @@ const routes: Array<RouteRecordRaw> = [
         name: 'barcode',
         component: BarcodeView,
         meta: { requiresAuth: false } // Public route - you can change this to true if you want it protected
+    },
+    {
+        path: '/product',
+        name: 'product',
+        component: ProductView,
+        meta: { requiresAuth: true } // Public route - you can change this to true if you want it protected
     }
-
 
 ];
 
