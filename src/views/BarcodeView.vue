@@ -1,6 +1,7 @@
+
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
-import Quagga from '@ericblade/quagga2';
+import Quagga, { type QuaggaJSConfigObject } from '@ericblade/quagga2';
 
 const isScanning = ref(false);
 const scannedData = ref<string>('');
@@ -20,34 +21,34 @@ const startScanner = async () => {
       throw new Error('Scanner container not found');
     }
 
-    const config = {
+    const config: QuaggaJSConfigObject = {
       inputStream: {
         name: "Live",
-        type: "LiveStream" as const,
+        type: "LiveStream",
         target: scannerContainer.value,
         constraints: {
           width: { min: 640, ideal: 1280 },
           height: { min: 480, ideal: 720 },
-          facingMode: "environment" as const, // Use back camera
+          facingMode: "environment", // Use back camera
           aspectRatio: { min: 1, max: 2 }
         }
       },
       locator: {
-        patchSize: "medium" as const,
+        patchSize: "medium",
         halfSample: true
       },
       numOfWorkers: 2,
       decoder: {
         readers: [
-          "code_128_reader",
-          "ean_reader",
-          "ean_8_reader",
-          "code_39_reader",
-          "code_39_vin_reader",
-          "codabar_reader",
-          "upc_reader",
-          "upc_e_reader",
-          "i2of5_reader"
+          { format: "code_128", config: {} },
+          { format: "ean", config: {} },
+          { format: "ean_8", config: {} },
+          { format: "code_39", config: {} },
+          { format: "code_39_vin", config: {} },
+          { format: "codabar", config: {} },
+          { format: "upc", config: {} },
+          { format: "upc_e", config: {} },
+          { format: "i2of5", config: {} }
         ]
       },
       locate: true
