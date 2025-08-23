@@ -8,20 +8,38 @@ const scannedData = ref<string>('');
 const errorMessage = ref<string>('');
 const scannerContainer = ref<HTMLElement | null>(null);
 const isInitialized = ref(false);
+const debugMessages = ref<string[]>([]);
+const showDebugPanel = ref(false);
+
+// Debug helper function
+const addDebugMessage = (message: string) => {
+  const timestamp = new Date().toLocaleTimeString();
+  debugMessages.value.unshift(`[${timestamp}] ${message}`);
+  // Keep only last 20 messages
+  if (debugMessages.value.length > 20) {
+    debugMessages.value = debugMessages.value.slice(0, 20);
+  }
+  console.log(`DEBUG: ${message}`);
+};
 
 // Start the barcode scanner
 const startScanner = async () => {
   try {
     errorMessage.value = '';
     isScanning.value = true;
+    addDebugMessage('Starting scanner...');
 
     await nextTick(); // Wait for DOM updates
 
     if (!scannerContainer.value) {
-      errorMessage.value = 'Scanner container not found';
+      const error = 'Scanner container not found';
+      errorMessage.value = error;
+      addDebugMessage(`ERROR: ${error}`);
       isScanning.value = false;
-      return; // Early return instead of throwing
+      return;
     }
+
+    addDebugMessage('Scanner container found, initializing Quagga...');
 
     const config: QuaggaJSConfigObject = {
       inputStream: {
@@ -56,31 +74,46 @@ const startScanner = async () => {
       locate: true
     };
 
+    addDebugMessage(`Config created with ${config.decoder?.readers?.length || 0} readers`);
+
     return new Promise<void>((resolve, reject) => {
       Quagga.init(config, (err: any) => {
         if (err) {
-          console.error('Error initializing Quagga:', err);
+          const errorMsg = `Error initializing Quagga: ${err.message || err}`;
+          console.error(errorMsg, err);
+          addDebugMessage(`ERROR: ${errorMsg}`);
           reject(err);
           return;
         }
 
-        console.log("Initialization finished. Ready to start");
+        addDebugMessage("Quagga initialization finished. Starting camera...");
         Quagga.start();
         isInitialized.value = true;
 
+        // Add processing event listener for debugging
+        Quagga.onProcessed((result: any) => {
+          if (result && result.boxes) {
+            addDebugMessage(`Processing frame: ${result.boxes.length} detection boxes found`);
+          }
+        });
+
         // Set up the detection handler
         Quagga.onDetected((data: any) => {
+          addDebugMessage(`BARCODE DETECTED! Code: ${data.codeResult.code}, Format: ${data.codeResult.format}`);
           console.log('Barcode detected:', data);
           scannedData.value = data.codeResult.code;
           stopScanner();
         });
 
+        addDebugMessage("Scanner started successfully. Camera should be active.");
         resolve();
       });
     });
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Failed to start scanner';
     console.error('Error starting scanner:', error);
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to start scanner';
+    addDebugMessage(`ERROR: ${errorMsg}`);
+    errorMessage.value = errorMsg;
     isScanning.value = false;
     throw error;
   }
@@ -89,14 +122,17 @@ const startScanner = async () => {
 // Stop the barcode scanner
 const stopScanner = () => {
   if (isInitialized.value) {
+    addDebugMessage('Stopping scanner...');
     Quagga.stop();
     isInitialized.value = false;
   }
   isScanning.value = false;
+  addDebugMessage('Scanner stopped.');
 };
 
 // Reset the scanner for a new scan
 const resetScanner = () => {
+  addDebugMessage('Resetting scanner...');
   scannedData.value = '';
   errorMessage.value = '';
   stopScanner();
@@ -104,12 +140,56 @@ const resetScanner = () => {
 
 // Check if the device supports camera
 const checkCameraSupport = () => {
-  if (typeof window !== 'undefined' &&
-      (!window.navigator?.mediaDevices || !window.navigator?.mediaDevices?.getUserMedia)) {
-    errorMessage.value = 'Camera is not supported on this device';
+  addDebugMessage('Checking camera support...');
+
+  if (typeof window === 'undefined') {
+    addDebugMessage('ERROR: Window object not available');
     return false;
   }
+
+  if (!window.navigator) {
+    addDebugMessage('ERROR: Navigator not available');
+    errorMessage.value = 'Navigator is not supported on this device';
+    return false;
+  }
+
+  if (!window.navigator.mediaDevices) {
+    addDebugMessage('ERROR: MediaDevices not available');
+    errorMessage.value = 'MediaDevices is not supported on this device';
+    return false;
+  }
+
+  if (!window.navigator.mediaDevices.getUserMedia) {
+    addDebugMessage('ERROR: getUserMedia not available');
+    errorMessage.value = 'Camera access is not supported on this device';
+    return false;
+  }
+
+  addDebugMessage('Camera support: OK');
   return true;
+};
+
+// Test camera permissions
+const testCameraPermissions = async () => {
+  try {
+    addDebugMessage('Testing camera permissions...');
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    });
+    addDebugMessage('Camera permission: GRANTED');
+    // Stop the test stream
+    stream.getTracks().forEach(track => track.stop());
+    return true;
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Camera permission denied';
+    addDebugMessage(`Camera permission: DENIED - ${errorMsg}`);
+    return false;
+  }
+};
+
+// Clear debug messages
+const clearDebugMessages = () => {
+  debugMessages.value = [];
 };
 
 // Copy to clipboard function
@@ -117,6 +197,7 @@ const copyToClipboard = async () => {
   try {
     if (typeof window !== 'undefined' && window.navigator?.clipboard) {
       await window.navigator.clipboard.writeText(scannedData.value);
+      addDebugMessage('Copied to clipboard successfully');
     } else {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
@@ -125,17 +206,22 @@ const copyToClipboard = async () => {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
+      addDebugMessage('Copied to clipboard (fallback method)');
     }
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Failed to copy';
     console.error('Failed to copy to clipboard:', error);
+    addDebugMessage(`ERROR copying to clipboard: ${errorMsg}`);
   }
 };
 
 onMounted(() => {
+  addDebugMessage('Component mounted');
   checkCameraSupport();
 });
 
 onUnmounted(() => {
+  addDebugMessage('Component unmounting...');
   stopScanner();
 });
 </script>
@@ -149,6 +235,69 @@ onUnmounted(() => {
       </v-card-title>
 
       <v-card-text>
+        <!-- Debug Panel Toggle -->
+        <div class="mb-4">
+          <v-btn
+              @click="showDebugPanel = !showDebugPanel"
+              color="info"
+              variant="outlined"
+              size="small"
+          >
+            <v-icon class="me-2">mdi-bug</v-icon>
+            {{ showDebugPanel ? 'Hide' : 'Show' }} Debug Info
+          </v-btn>
+          <v-btn
+              v-if="showDebugPanel"
+              @click="testCameraPermissions"
+              color="warning"
+              variant="outlined"
+              size="small"
+              class="ml-2"
+          >
+            <v-icon class="me-2">mdi-camera-check</v-icon>
+            Test Camera
+          </v-btn>
+        </div>
+
+        <!-- Debug Panel -->
+        <v-card
+            v-if="showDebugPanel"
+            variant="outlined"
+            class="mb-4"
+        >
+          <v-card-title class="text-h6 d-flex align-center">
+            <v-icon class="me-2">mdi-console</v-icon>
+            Debug Messages
+            <v-spacer></v-spacer>
+            <v-btn
+                @click="clearDebugMessages"
+                color="error"
+                variant="text"
+                size="small"
+            >
+              Clear
+            </v-btn>
+          </v-card-title>
+          <v-card-text>
+            <div class="debug-messages">
+              <div
+                  v-for="(message, index) in debugMessages"
+                  :key="index"
+                  class="debug-message"
+                  :class="{ 
+                    'error-message': message.includes('ERROR'),
+                    'success-message': message.includes('DETECTED') || message.includes('OK')
+                  }"
+              >
+                {{ message }}
+              </div>
+              <div v-if="debugMessages.length === 0" class="text-grey">
+                No debug messages yet...
+              </div>
+            </div>
+          </v-card-text>
+        </v-card>
+
         <!-- Scanner Container -->
         <div v-if="!scannedData" class="scanner-section">
           <div
@@ -336,6 +485,34 @@ onUnmounted(() => {
   background-color: #f8f9fa;
   border-radius: 4px;
   border: 1px solid #e9ecef;
+}
+
+.debug-messages {
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.debug-message {
+  margin-bottom: 4px;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.debug-message.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.debug-message.success-message {
+  background-color: #e8f5e8;
+  color: #2e7d32;
 }
 
 /* Quagga specific styles */

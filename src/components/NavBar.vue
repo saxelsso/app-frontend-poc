@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { ref, onMounted } from 'vue';
 //import { Auth } from '@aws-amplify/auth';
 import { getCurrentUser } from 'aws-amplify/auth';
@@ -101,6 +101,9 @@ const handleSignOut = async () => {
       </v-list-item>
       <v-list-item to="/trees" @click="isMobileMenuOpen = false">
         <v-list-item-title>Trees</v-list-item-title>
+      </v-list-item>
+      <v-list-item to="/barcode" @click="isMobileMenuOpen = false">
+        <v-list-item-title>Barcode</v-list-item-title>
       </v-list-item>
       
       <v-divider></v-divider>
