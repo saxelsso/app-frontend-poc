@@ -309,6 +309,7 @@ input {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+  flex-wrap: nowrap;
 }
 
 .product-info {
@@ -316,6 +317,7 @@ input {
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-width: 0;
 }
 
 .product-name {
@@ -363,17 +365,19 @@ input {
 /* Mobile responsiveness */
 @media (max-width: 640px) {
   .product-details {
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row; /* Keep row direction instead of column */
+    gap: 8px; /* Reduce gap for tighter spacing */
+    /* align-items: center; /* Center align items vertically */
   }
 
   .product-actions {
-    align-self: stretch;
+    /* Remove align-self as it's not needed anymore */
   }
 
   .edit-btn {
-    flex: 1;
-    padding: 8px 16px;
+    padding: 8px 12px; /* Slightly smaller padding for narrow screens */
+    font-size: 0.85em; /* Slightly smaller font */
   }
 }
+
 </style>
