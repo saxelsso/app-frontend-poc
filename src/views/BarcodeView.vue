@@ -60,15 +60,15 @@ const startScanner = async () => {
       numOfWorkers: 2,
       decoder: {
         readers: [
-          { format: "code_128", config: { supplements: [] } },
-          { format: "ean", config: { supplements: [] } },
-          { format: "ean_8", config: { supplements: [] } },
-          { format: "code_39", config: { supplements: [] } },
-          { format: "code_39_vin", config: { supplements: [] } },
-          { format: "codabar", config: { supplements: [] } },
-          { format: "upc", config: { supplements: [] } },
-          { format: "upc_e", config: { supplements: [] } },
-          { format: "i2of5", config: { supplements: [] } }
+          { format: "code_128_reader", config: { supplements: [] } },
+          { format: "ean_reader", config: { supplements: [] } },
+          { format: "ean_8_reader", config: { supplements: [] } },
+          { format: "code_39_reader", config: { supplements: [] } },
+          { format: "code_39_vin_reader", config: { supplements: [] } },
+          { format: "codabar_reader", config: { supplements: [] } },
+          { format: "upc_reader", config: { supplements: [] } },
+          { format: "upc_e_reader", config: { supplements: [] } },
+          { format: "i2of5_reader", config: { supplements: [] } }
         ]
       },
       locate: true
