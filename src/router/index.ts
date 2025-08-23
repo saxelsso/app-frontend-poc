@@ -11,6 +11,7 @@ import BarcodeView from '../views/BarcodeView.vue';
 import ProductView from '../views/ProductView.vue';
 import InventoryView from '../views/InventoryView.vue';
 import OrderView from '../views/OrderView.vue';
+import OrderHistoryView from '../views/OrderHistoryView.vue';
 import { getCurrentUser } from 'aws-amplify/auth';
 //import { Auth } from 'aws-amplify';
 
@@ -80,6 +81,12 @@ const routes: Array<RouteRecordRaw> = [
         path: '/order',
         name: 'Order',
         component: OrderView,
+        meta: { requiresAuth: true } // Public route - you can change this to true if you want it protected
+    },
+    {
+        path: '/orderhistory',
+        name: 'OrderHistory',
+        component: OrderHistoryView,
         meta: { requiresAuth: true } // Public route - you can change this to true if you want it protected
     },
 ];

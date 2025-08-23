@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import Product from '@/components/Product.vue';
+import OrderHistory from '@/components/OrderHistory.vue';
 </script>
 
 <template>
-  <div class="product-view">
-    <h1>Product Catalog</h1>
-    <Product />
+  <div class="orderhistory-view">
+    <h1>Order History</h1>
+    <OrderHistory />
   </div>
 </template>
 
 <style scoped>
-.product-view {
+.orderhistory-view {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
