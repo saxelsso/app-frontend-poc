@@ -4,7 +4,6 @@ import OrderHistory from '@/components/OrderHistory.vue';
 
 <template>
   <div class="orderhistory-view">
-    <h1>Order History</h1>
     <OrderHistory />
   </div>
 </template>

@@ -4,7 +4,6 @@ import Inventory from '@/components/Inventory.vue';
 
 <template>
   <div class="inventory-view">
-    <h1>Product Inventory</h1>
     <Inventory />
   </div>
 </template>

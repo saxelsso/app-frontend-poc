@@ -80,10 +80,6 @@ const averageOrderValue = computed(() => {
   return totalSales.value / completed.length;
 });
 
-const pendingOrders = computed(() => {
-  return orders.value.filter(order => order.status?.toLowerCase() === 'pending').length;
-});
-
 function listOrders() {
   client.models.Order.observeQuery().subscribe({
     next: ({ items }) => {
@@ -117,11 +113,6 @@ onMounted(() => {
       <div class="stat-card">
         <div class="stat-value">{{ formatCurrency(averageOrderValue) }}</div>
         <div class="stat-label">Average Order Value</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-value">{{ pendingOrders }}</div>
-        <div class="stat-label">Pending Orders</div>
       </div>
     </div>
 

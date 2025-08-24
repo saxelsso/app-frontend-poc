@@ -4,7 +4,6 @@ import Order from '@/components/Order.vue';
 
 <template>
   <div class="order-view">
-    <h1>Order</h1>
     <Order />
   </div>
 </template>

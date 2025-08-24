@@ -4,7 +4,6 @@ import Stats from '@/components/Stats.vue';
 
 <template>
   <div class="stats-view">
-    <h1>Sales Statistics</h1>
     <Stats />
   </div>
 </template>

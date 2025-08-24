@@ -359,7 +359,7 @@ async function submitOrder() {
 
 <template>
   <div class="sell-container">
-    <h3>Create Sale</h3>
+
 
     <div class="lines">
       <div

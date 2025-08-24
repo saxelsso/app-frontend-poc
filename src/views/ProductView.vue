@@ -4,7 +4,6 @@ import Product from '@/components/Product.vue';
 
 <template>
   <div class="product-view">
-    <h1>Product Catalog</h1>
     <Product />
   </div>
 </template>
