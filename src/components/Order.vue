@@ -59,6 +59,8 @@ const handleBarcodeScanned = (scannedBarcode: string) => {
     lines[currentScanningLineIndex.value].productId = product.productId;
     // Set quantity to 1 when a product is selected via barcode
     lines[currentScanningLineIndex.value].quantity = 1;
+    // Clear any previous error messages on successful scan
+    formError.value = '';
     showScanner.value = false;
   } else {
     // Show error if barcode not found
