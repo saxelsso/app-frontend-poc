@@ -38,6 +38,8 @@ const schema = a.schema({
             productId: a.string().required(),
             productName: a.string().required(),
             listPrice: a.float().required(),
+            barcode: a.string(), // Optional string for barcode
+            isSellable: a.boolean().required().default(false),
             inventory: a.hasMany('Inventory', 'productId'),
             orderItems: a.hasMany('OrderItem', 'productId'),
         })
