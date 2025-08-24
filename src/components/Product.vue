@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 import type { Schema } from '../../amplify/data/resource';
 import { generateClient } from 'aws-amplify/data';
+import { isValidBarcode } from '@/utils/barcodeValidation';
 
 const client = generateClient<Schema>();
 
@@ -47,6 +48,11 @@ function validateForm(): boolean {
   }
   if (listPrice.value === null || isNaN(listPrice.value) || listPrice.value <= 0) {
     formError.value = 'List price must be a positive number';
+    return false;
+  }
+  const barcodeValidation = isValidBarcode(barcode.value);
+  if (!barcodeValidation.valid) {
+    formError.value = barcodeValidation.error;
     return false;
   }
   formError.value = '';
