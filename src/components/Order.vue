@@ -33,6 +33,17 @@ const formSuccess = ref<string>('');
 const showScanner = ref<boolean>(false);
 const currentScanningLineIndex = ref<number>(0);
 
+// Handle product selection from dropdown
+const onProductSelected = (event: Event, lineIndex: number) => {
+  const target = event.target as HTMLSelectElement;
+  const productId = target.value;
+
+  if (productId && lines[lineIndex].quantity === null) {
+    // Set quantity to 1 when a product is selected and quantity is null
+    lines[lineIndex].quantity = 1;
+  }
+};
+
 // Scanner event handlers
 const openBarcodeScanner = (lineIndex: number) => {
   currentScanningLineIndex.value = lineIndex;
@@ -46,6 +57,8 @@ const handleBarcodeScanned = (scannedBarcode: string) => {
   if (product && product.productId) {
     // Set the productId for the current line being scanned
     lines[currentScanningLineIndex.value].productId = product.productId;
+    // Set quantity to 1 when a product is selected via barcode
+    lines[currentScanningLineIndex.value].quantity = 1;
     showScanner.value = false;
   } else {
     // Show error if barcode not found
@@ -57,6 +70,21 @@ const handleBarcodeScanned = (scannedBarcode: string) => {
 const handleScannerClosed = () => {
   showScanner.value = false;
 };
+
+// Add these helper functions for the stepper
+function incrementQuantity(index: number) {
+  const current = lines[index].quantity || 0;
+  if (current < 100) {
+    lines[index].quantity = current + 1;
+  }
+}
+
+function decrementQuantity(index: number) {
+  const current = lines[index].quantity || 1;
+  if (current > 1) {
+    lines[index].quantity = current - 1;
+  }
+}
 
 // Load products for select options
 function listProducts() {
@@ -322,8 +350,8 @@ async function submitOrder() {
         <div class="field product-field">
           <label>Product</label>
           <div class="product-input-group">
-            <select v-model="l.productId">
-              <option value="">Select a product</option>
+            <select v-model="l.productId" @change="onProductSelected($event, idx)">
+            <option value="">Select a product</option>
               <option
                   v-for="p in products"
                   :key="p.productId"
@@ -349,14 +377,39 @@ async function submitOrder() {
         <div class="qty-subtotal-row">
           <div class="field qty">
             <label>Quantity</label>
-            <input
-                v-model.number="l.quantity"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Qty"
-            />
+            <div class="qty-stepper">
+              <v-btn
+                  icon
+                  size="small"
+                  variant="outlined"
+                  @click="decrementQuantity(idx)"
+                  :disabled="(l.quantity || 1) <= 1"
+              >
+                <v-icon>mdi-minus</v-icon>
+              </v-btn>
+
+              <v-text-field
+                  v-model="l.quantity"
+                  readonly
+                  variant="outlined"
+                  density="compact"
+                  style="width: 60px"
+                  class="text-center"
+                  hide-details
+              ></v-text-field>
+
+              <v-btn
+                  icon
+                  size="small"
+                  variant="outlined"
+                  @click="incrementQuantity(idx)"
+                  :disabled="(l.quantity || 0) >= 100"
+              >
+                <v-icon>mdi-plus</v-icon>
+              </v-btn>
+            </div>
           </div>
+
 
           <div class="field subtotal">
             <label>Subtotal</label>
@@ -598,19 +651,38 @@ async function submitOrder() {
   }
 
   .qty-subtotal-row {
-    grid-template-columns: 80px 1fr auto;
-    gap: 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+    align-items: end;
   }
 
   .field select,
   .field input {
-    font-size: 16px; /* Prevents zoom on iOS */
-    padding: 6px 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .qty input {
+    min-width: 0; /* Allow input to shrink */
+  }
+
+  .subtotal {
+    display: flex;
+    flex-direction: column;
   }
 
   .subtotal-value {
-    padding: 6px 8px;
-    font-size: 14px;
+    padding: 8px 12px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    font-weight: 500;
+    text-align: right;
+    min-width: 0; /* Allow subtotal to shrink */
+    word-break: break-all; /* Break long numbers if needed */
   }
 
   .remove-btn {
@@ -630,6 +702,49 @@ async function submitOrder() {
     font-size: 16px;
   }
 }
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  .qty-subtotal-row {
+    grid-template-columns: 1fr 80px auto; /* Give quantity more space, limit subtotal */
+    gap: 6px;
+  }
+
+  .subtotal-value {
+    padding: 6px 4px; /* Reduce padding significantly */
+    font-size: 12px; /* Smaller font */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .field select,
+  .field input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 6px 8px;
+  }
+
+  .remove-btn {
+    height: 32px;
+    width: 32px;
+    font-size: 16px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .qty-subtotal-row {
+    grid-template-columns: 1fr 70px auto; /* Even more space for quantity */
+    gap: 4px;
+  }
+
+  .subtotal-value {
+    padding: 4px 2px; /* Minimal padding */
+    font-size: 11px;
+  }
+}
+
+
 @media (max-width: 320px) {
   .product-input-group {
     gap: 4px; /* Reduce gap on very small screens */
@@ -640,5 +755,35 @@ async function submitOrder() {
     min-width: 40px;
   }
 }
+
+.qty-buttons .v-btn {
+  min-width: 40px;
+}
+
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-rating {
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .qty-buttons {
+    max-width: 100%;
+  }
+
+  .qty-buttons .v-btn {
+    min-width: 35px;
+    font-size: 12px;
+  }
+
+  .qty-stepper {
+    gap: 4px;
+  }
+}
+
 
 </style>
