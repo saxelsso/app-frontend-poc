@@ -52,7 +52,7 @@ const openBarcodeScanner = (lineIndex: number) => {
 
 const handleBarcodeScanned = (scannedBarcode: string) => {
   // Find product by barcode
-  const product = products.value.find(p => p.barcode === scannedBarcode);
+  const product = products.value.find(p => p.barcode === scannedBarcode && p.isSellable === true);
 
   if (product && product.productId) {
     // Set the productId for the current line being scanned
@@ -90,7 +90,8 @@ function decrementQuantity(index: number) {
 function listProducts() {
   client.models.Product.observeQuery().subscribe({
     next: ({ items }) => {
-      products.value = items;
+      // Filter to only include sellable products
+      products.value = items.filter(product => product.isSellable === true);
     },
   });
 }
@@ -194,6 +195,17 @@ function validate(): boolean {
       formError.value = `Line ${idx + 1}: Please select a product.`;
       return false;
     }
+    // Validate that the selected product is sellable
+    const product = productById.value.get(l.productId);
+    if (!product) {
+      formError.value = `Line ${idx + 1}: Product not found.`;
+      return false;
+    }
+    if (!product.isSellable) {
+      formError.value = `Line ${idx + 1}: Product ${product.productName} is not sellable.`;
+      return false;
+    }
+
     if (seen.has(l.productId)) {
       formError.value = `Product ${productById.value.get(l.productId)?.productName ?? l.productId} is duplicated. Use quantity on a single line.`;
       return false;
@@ -272,7 +284,10 @@ async function submitOrder() {
     });
 
     const orderId = orderRes.data?.id as Order['id'];
-    if (!orderId) throw new Error('Failed to create order');
+    if (!orderId) {
+      formError.value = 'Failed to create order';
+      return;
+    }
 
     console.log(`📝 Created order with ID: ${orderId}`);
 
@@ -317,7 +332,12 @@ async function submitOrder() {
         stockLevel: newStock < 0 ? 0 : newStock,
         lastUpdated: Date.now(),
       });
-      console.log('✅ Inventory update completed');
+
+      if (!updateResult.data) {
+        console.warn(`⚠️ Failed to update inventory for product ${item.productId}`);
+      } else {
+        console.log('✅ Inventory update completed');
+      }
     }
 
     console.log('🎉 All inventory updates completed!');
