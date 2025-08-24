@@ -89,7 +89,7 @@ function listOrders() {
 }
 
 function formatCurrency(amount: number | null | undefined): string {
-  return `€${(amount ?? 0).toFixed(2)}`;
+  return `${(amount ?? 0).toFixed(2)} kr`;
 }
 
 onMounted(() => {

@@ -379,7 +379,7 @@ async function submitOrder() {
                   :disabled="(stockByProductId.get(p.productId) ?? 0) <= 0"
               >
                 {{ p.productName }} (ID: {{ p.productId }}) —
-                €{{ (p.listPrice ?? 0).toFixed(2) }} —
+                {{ (p.listPrice ?? 0).toFixed(2) }} kr —
                 Stock: {{ stockByProductId.get(p.productId) ?? 0 }}
               </option>
             </select>
@@ -434,7 +434,7 @@ async function submitOrder() {
           <div class="field subtotal">
             <label>Subtotal</label>
             <div class="subtotal-value">
-              €{{ lineSubtotals[idx].toFixed(2) }}
+              {{ lineSubtotals[idx].toFixed(2) }} kr
             </div>
           </div>
 
@@ -463,7 +463,7 @@ async function submitOrder() {
 
     <div class="summary">
       <div class="total">
-        <strong>Total:</strong> €{{ orderTotal.toFixed(2) }}
+        <strong>Total:</strong> {{ orderTotal.toFixed(2) }} kr
       </div>
     </div>
 

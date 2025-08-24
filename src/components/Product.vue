@@ -225,7 +225,7 @@ onMounted(() => {
       </div>
 
       <div class="form-group">
-        <label for="listPrice">List Price (EUR)</label>
+        <label for="listPrice">List Price (SEK)</label>
         <input
             id="listPrice"
             v-model="listPrice"
@@ -290,7 +290,7 @@ onMounted(() => {
           <div class="product-info">
             <div class="product-id">ID: {{ product.productId }}</div>
             <div class="product-name">{{ product.productName }}</div>
-            <div class="product-price">€{{ product.listPrice?.toFixed(2) ?? '0.00' }}</div>
+            <div class="product-price">{{ product.listPrice?.toFixed(2) ?? '0.00' }} kr</div>
             <div class="product-barcode" v-if="product.barcode">Barcode: {{ product.barcode }}</div>
 
           </div>

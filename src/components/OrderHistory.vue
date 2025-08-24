@@ -66,7 +66,7 @@ function formatDate(timestamp: number | null | undefined): string {
 }
 
 function formatCurrency(amount: number | null | undefined): string {
-  return `€${(amount ?? 0).toFixed(2)}`;
+  return `${(amount ?? 0).toFixed(2)} kr`;
 }
 
 function getStatusColor(status: string | null | undefined): string {
