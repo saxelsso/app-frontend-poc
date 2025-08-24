@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import type { Schema } from '../../amplify/data/resource';
 import { generateClient } from 'aws-amplify/data';
 import { isValidBarcode } from '@/utils/barcodeValidation';
+import BarcodeScanner from '@/components/BarcodeScanner.vue';
 
 const client = generateClient<Schema>();
 
@@ -14,6 +15,7 @@ const barcode = ref<string>('');
 const isSellable = ref<boolean>(false);
 const showForm = ref<boolean>(false);
 const formError = ref<string>('');
+const showScanner = ref<boolean>(false);
 
 // Edit mode state
 const editingProduct = ref<Schema['Product']["type"] | null>(null);
@@ -21,6 +23,20 @@ const isEditMode = ref<boolean>(false);
 
 // Create a reactive reference to the array of products
 const products = ref<Array<Schema['Product']["type"]>>([]);
+
+// Scanner event handlers
+const openBarcodeScanner = () => {
+  showScanner.value = true;
+};
+
+const handleBarcodeScanned = (scannedBarcode: string) => {
+  barcode.value = scannedBarcode;
+  showScanner.value = false;
+};
+
+const handleScannerClosed = () => {
+  showScanner.value = false;
+};
 
 function listProducts() {
   client.models.Product.observeQuery().subscribe({
@@ -229,6 +245,14 @@ onMounted(() => {
             type="text"
             placeholder="Enter barcode (optional)"
         />
+        <button
+            type="button"
+            @click="openBarcodeScanner"
+            class="scan-btn"
+            title="Scan Barcode"
+        >
+          📷 Scan
+        </button>
       </div>
 
       <div class="form-group">
@@ -250,6 +274,12 @@ onMounted(() => {
         <button @click="cancelEdit" class="cancel-btn">Cancel</button>
       </div>
     </div>
+    <!-- Scanner Component -->
+    <BarcodeScanner
+        v-model:show="showScanner"
+        @barcode-scanned="handleBarcodeScanned"
+        @close="handleScannerClosed"
+    />
 
     <h3 v-if="!showForm">Products</h3>
     <ul v-if="products.length > 0">
@@ -335,6 +365,26 @@ input {
   font-size: 0.85em;
   color: #6b7280;
   font-style: italic;
+}
+
+.barcode-input-group input {
+  flex: 1;
+}
+
+.scan-btn {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.scan-btn:hover {
+  background-color: #059669;
 }
 
 .submit-btn {
@@ -447,6 +497,12 @@ input {
     padding: 8px 12px; /* Slightly smaller padding for narrow screens */
     font-size: 0.85em; /* Slightly smaller font */
   }
+
+  .scan-btn {
+    align-self: flex-start;
+    width: fit-content;
+  }
+
 }
 
 </style>
