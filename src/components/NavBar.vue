@@ -59,18 +59,19 @@ const handleSignOut = async () => {
     <!-- Desktop navigation -->
     <v-toolbar-items class="hidden-md-and-down">
       <v-btn text to="/">Home</v-btn>
-      <v-btn text to="/weather">Weather</v-btn>
       <!--
+      <v-btn text to="/weather">Weather</v-btn>
       <v-btn text to="/todos">Todos</v-btn>
       <v-btn text to="/sales">Sales</v-btn>
       <v-btn text to="/portfolio">Portfolio</v-btn>
       <v-btn text to="/trees">Trees</v-btn>
-      -->
       <v-btn text to="/barcode">Scan</v-btn>
+      -->
       <v-btn text to="/product">Product</v-btn>
       <v-btn text to="/inventory">Inventory</v-btn>
       <v-btn text to="/order">Order</v-btn>
       <v-btn text to="/orderhistory">Order History</v-btn>
+      <v-btn text to="/stats">Stats</v-btn>
 
       <template v-if="isAuthenticated">
         <v-btn text @click="handleSignOut">Sign Out</v-btn>
@@ -108,10 +109,10 @@ const handleSignOut = async () => {
       </v-list-item>
       <v-list-item to="/trees" @click="isMobileMenuOpen = false">
         <v-list-item-title>Trees</v-list-item-title>
-      </v-list-item> -->
+      </v-list-item>
       <v-list-item to="/barcode" @click="isMobileMenuOpen = false">
         <v-list-item-title>Scan</v-list-item-title>
-      </v-list-item>
+      </v-list-item> -->
       <v-list-item to="/product" @click="isMobileMenuOpen = false">
         <v-list-item-title>Product</v-list-item-title>
       </v-list-item>
@@ -123,6 +124,9 @@ const handleSignOut = async () => {
       </v-list-item>
       <v-list-item to="/orderhistory" @click="isMobileMenuOpen = false">
         <v-list-item-title>Order History</v-list-item-title>
+      </v-list-item>
+      <v-list-item to="/stats" @click="isMobileMenuOpen = false">
+        <v-list-item-title>Stats</v-list-item-title>
       </v-list-item>
       
       <v-divider></v-divider>
