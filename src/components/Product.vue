@@ -9,6 +9,8 @@ const client = generateClient<Schema>();
 const productId = ref<string>('');
 const productName = ref<string>('');
 const listPrice = ref<number | null>(null);
+const barcode = ref<string>('');
+const isSellable = ref<boolean>(false);
 const showForm = ref<boolean>(false);
 const formError = ref<string>('');
 
@@ -61,6 +63,8 @@ function createProduct() {
     productId: finalProductId,
     productName: productName.value,
     listPrice: listPrice.value as number,
+    barcode: barcode.value || undefined, // Send undefined if empty to let it be optional
+    isSellable: isSellable.value,
   }).then(() => {
     // After creating a new product, update the list
     listProducts();
@@ -85,6 +89,8 @@ function updateProduct() {
     productId: editingProduct.value.productId,
     productName: productName.value,
     listPrice: listPrice.value as number,
+    barcode: barcode.value || undefined, // Send undefined if empty to let it be optional
+    isSellable: isSellable.value,
   }).then(() => {
     // After updating, refresh the list
     listProducts();
@@ -104,6 +110,8 @@ function startEdit(product: Schema['Product']["type"]) {
   productId.value = ''; // Keep empty since we don't want users to edit this
   productName.value = product.productName || '';
   listPrice.value = product.listPrice || null;
+  barcode.value = product.barcode || '';
+  isSellable.value = product.isSellable || false;
 
   showForm.value = true;
 
@@ -127,6 +135,8 @@ function resetForm() {
   productId.value = '';
   productName.value = '';
   listPrice.value = null;
+  barcode.value = '';
+  isSellable.value = false;
   formError.value = '';
   editingProduct.value = null;
   isEditMode.value = false;
@@ -205,6 +215,26 @@ onMounted(() => {
         />
       </div>
 
+      <div class="form-group">
+        <label for="barcode">Barcode</label>
+        <input
+            id="barcode"
+            v-model="barcode"
+            type="text"
+            placeholder="Enter barcode (optional)"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input
+              type="checkbox"
+              v-model="isSellable"
+          />
+          Product is sellable
+        </label>
+      </div>
+
       <div v-if="formError" class="error-message">{{ formError }}</div>
 
       <div class="form-actions">
@@ -225,6 +255,12 @@ onMounted(() => {
             <div class="product-id">ID: {{ product.productId }}</div>
             <div class="product-name">{{ product.productName }}</div>
             <div class="product-price">€{{ product.listPrice?.toFixed(2) ?? '0.00' }}</div>
+            <div class="product-barcode" v-if="product.barcode">Barcode: {{ product.barcode }}</div>
+            <div class="product-sellable">
+              <span :class="{ 'sellable': product.isSellable, 'not-sellable': !product.isSellable }">
+                {{ product.isSellable ? '✓ Sellable' : '✗ Not Sellable' }}
+              </span>
+            </div>
           </div>
           <div class="product-actions">
             <button @click="startEdit(product)" class="edit-btn">Edit</button>
@@ -368,6 +404,26 @@ input {
   gap: 8px;
   margin-top: 16px;
 }
+
+.product-barcode {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.product-sellable {
+  font-size: 0.9em;
+}
+
+.sellable {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.not-sellable {
+  color: #ef4444;
+  font-weight: 500;
+}
+
 
 /* Mobile responsiveness */
 @media (max-width: 640px) {
