@@ -239,30 +239,30 @@ onMounted(() => {
 
       <div class="form-group">
         <label for="barcode">Barcode</label>
-        <input
-            id="barcode"
-            v-model="barcode"
-            type="text"
-            placeholder="Enter barcode (optional)"
-        />
-        <button
-            type="button"
-            @click="openBarcodeScanner"
-            class="scan-btn"
-            title="Scan Barcode"
-        >
-          📷 Scan
-        </button>
+        <div class="barcode-input-group">
+          <input
+              id="barcode"
+              v-model="barcode"
+              type="text"
+              placeholder="Enter barcode (optional)"
+          />
+          <button
+              type="button"
+              @click="openBarcodeScanner"
+              class="scan-btn"
+              title="Scan Barcode"
+          >
+            <v-icon>mdi-barcode-scan</v-icon>
+          </button>
+        </div>
       </div>
 
       <div class="form-group">
-        <label>
-          <input
-              type="checkbox"
-              v-model="isSellable"
-          />
-          Product is sellable
-        </label>
+        <v-checkbox
+            v-model="isSellable"
+            label="Product is sellable"
+            color="primary"
+        ></v-checkbox>
       </div>
 
       <div v-if="formError" class="error-message">{{ formError }}</div>
@@ -292,13 +292,18 @@ onMounted(() => {
             <div class="product-name">{{ product.productName }}</div>
             <div class="product-price">€{{ product.listPrice?.toFixed(2) ?? '0.00' }}</div>
             <div class="product-barcode" v-if="product.barcode">Barcode: {{ product.barcode }}</div>
-            <div class="product-sellable">
-              <span :class="{ 'sellable': product.isSellable, 'not-sellable': !product.isSellable }">
-                {{ product.isSellable ? '✓ Sellable' : '✗ Not Sellable' }}
-              </span>
-            </div>
+
           </div>
           <div class="product-actions">
+            <v-checkbox
+                :model-value="product.isSellable"
+                :label="product.isSellable ? 'Sellable' : 'Sellable'"
+                color="success"
+                readonly
+                density="compact"
+                hide-details
+            ></v-checkbox>
+
             <button @click="startEdit(product)" class="edit-btn">Edit</button>
           </div>
         </div>
@@ -367,24 +372,49 @@ input {
   font-style: italic;
 }
 
+.barcode-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+
 .barcode-input-group input {
   flex: 1;
+  min-width: 0;
 }
 
 .scan-btn {
-  background-color: #10b981;
+  background-color: #1976D2; /* Vuetify primary blue color */
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9em;
   white-space: nowrap;
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  flex-shrink: 0;
 }
 
 .scan-btn:hover {
-  background-color: #059669;
+  background-color: #1565C0; /* Darker blue on hover */
+}
+
+/* Ensure the layout works well on very small screens */
+@media (max-width: 320px) {
+  .barcode-input-group {
+    gap: 4px; /* Reduce gap on very small screens */
+  }
+
+  .scan-btn {
+    padding: 8px 8px; /* Slightly reduce padding on very small screens */
+    min-width: 40px;
+  }
 }
 
 .submit-btn {
@@ -465,21 +495,6 @@ input {
   font-size: 0.9em;
   color: #666;
 }
-
-.product-sellable {
-  font-size: 0.9em;
-}
-
-.sellable {
-  color: #10b981;
-  font-weight: 500;
-}
-
-.not-sellable {
-  color: #ef4444;
-  font-weight: 500;
-}
-
 
 /* Mobile responsiveness */
 @media (max-width: 640px) {
