@@ -756,29 +756,13 @@ async function submitOrder() {
   }
 }
 
-.qty-buttons .v-btn {
-  min-width: 40px;
-}
-
 .qty-stepper {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.qty-rating {
-  margin-top: 8px;
-}
-
 @media (max-width: 640px) {
-  .qty-buttons {
-    max-width: 100%;
-  }
-
-  .qty-buttons .v-btn {
-    min-width: 35px;
-    font-size: 12px;
-  }
 
   .qty-stepper {
     gap: 4px;
