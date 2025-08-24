@@ -193,7 +193,6 @@ watch(() => props.show, handleShowChange);
               border="start"
               density="compact"
           >
-            <v-icon class="me-2">mdi-information</v-icon>
             Point your camera at a barcode. The scan will happen automatically.
           </v-alert>
 
@@ -205,7 +204,6 @@ watch(() => props.show, handleShowChange);
               border="start"
               density="compact"
           >
-            <v-icon class="me-2">mdi-alert-circle</v-icon>
             {{ errorMessage }}
           </v-alert>
         </div>

@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import type { Schema } from '../../amplify/data/resource';
 import { generateClient } from 'aws-amplify/data';
+import BarcodeScanner from '@/components/BarcodeScanner.vue';
 
 type Product = Schema['Product']['type'];
 type Inventory = Schema['Inventory']['type'];
@@ -27,6 +28,35 @@ const lines = reactive<OrderLine[]>([
 const submitting = ref(false);
 const formError = ref<string>('');
 const formSuccess = ref<string>('');
+
+// Scanner state
+const showScanner = ref<boolean>(false);
+const currentScanningLineIndex = ref<number>(0);
+
+// Scanner event handlers
+const openBarcodeScanner = (lineIndex: number) => {
+  currentScanningLineIndex.value = lineIndex;
+  showScanner.value = true;
+};
+
+const handleBarcodeScanned = (scannedBarcode: string) => {
+  // Find product by barcode
+  const product = products.value.find(p => p.barcode === scannedBarcode);
+
+  if (product && product.productId) {
+    // Set the productId for the current line being scanned
+    lines[currentScanningLineIndex.value].productId = product.productId;
+    showScanner.value = false;
+  } else {
+    // Show error if barcode not found
+    formError.value = `No product found with barcode: ${scannedBarcode}`;
+    showScanner.value = false;
+  }
+};
+
+const handleScannerClosed = () => {
+  showScanner.value = false;
+};
 
 // Load products for select options
 function listProducts() {
@@ -291,19 +321,29 @@ async function submitOrder() {
       >
         <div class="field product-field">
           <label>Product</label>
-          <select v-model="l.productId">
-            <option value="">Select a product</option>
-            <option
-                v-for="p in products"
-                :key="p.productId"
-                :value="String(p.productId)"
-                :disabled="(stockByProductId.get(p.productId) ?? 0) <= 0"
+          <div class="product-input-group">
+            <select v-model="l.productId">
+              <option value="">Select a product</option>
+              <option
+                  v-for="p in products"
+                  :key="p.productId"
+                  :value="String(p.productId)"
+                  :disabled="(stockByProductId.get(p.productId) ?? 0) <= 0"
+              >
+                {{ p.productName }} (ID: {{ p.productId }}) —
+                €{{ (p.listPrice ?? 0).toFixed(2) }} —
+                Stock: {{ stockByProductId.get(p.productId) ?? 0 }}
+              </option>
+            </select>
+            <button
+                type="button"
+                @click="openBarcodeScanner(idx)"
+                class="scan-btn"
+                title="Scan Barcode"
             >
-              {{ p.productName }} (ID: {{ p.productId }}) —
-              €{{ (p.listPrice ?? 0).toFixed(2) }} —
-              Stock: {{ stockByProductId.get(p.productId) ?? 0 }}
-            </option>
-          </select>
+              <v-icon>mdi-barcode-scan</v-icon>
+            </button>
+          </div>
         </div>
 
         <div class="qty-subtotal-row">
@@ -336,6 +376,13 @@ async function submitOrder() {
         </div>
       </div>
     </div>
+
+    <!-- Scanner Component -->
+    <BarcodeScanner
+        v-model:show="showScanner"
+        @barcode-scanned="handleBarcodeScanned"
+        @close="handleScannerClosed"
+    />
 
     <div class="actions">
       <button @click="addLine">+ Add Item</button>
@@ -498,6 +545,40 @@ async function submitOrder() {
   cursor: pointer;
 }
 
+.product-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+
+.product-input-group select {
+  flex: 1;
+  min-width: 0;
+}
+
+.scan-btn {
+  background-color: #1976D2; /* Vuetify primary blue color */
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  white-space: nowrap;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  flex-shrink: 0;
+}
+
+.scan-btn:hover {
+  background-color: #1565C0; /* Darker blue on hover */
+}
+
+
 /* Mobile-specific adjustments */
 @media (max-width: 640px) {
   .sell-container {
@@ -506,6 +587,14 @@ async function submitOrder() {
 
   .line {
     padding: 8px;
+  }
+  .product-input-group {
+    gap: 4px; /* Reduce gap on very small screens */
+  }
+
+  .scan-btn {
+    padding: 8px 8px; /* Slightly reduce padding on very small screens */
+    min-width: 40px;
   }
 
   .qty-subtotal-row {
@@ -541,4 +630,15 @@ async function submitOrder() {
     font-size: 16px;
   }
 }
+@media (max-width: 320px) {
+  .product-input-group {
+    gap: 4px; /* Reduce gap on very small screens */
+  }
+
+  .scan-btn {
+    padding: 8px 8px; /* Slightly reduce padding on very small screens */
+    min-width: 40px;
+  }
+}
+
 </style>
