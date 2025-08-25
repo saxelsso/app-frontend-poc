@@ -7,6 +7,8 @@ const client = generateClient<Schema>();
 
 // Data collections
 const orders = ref<Array<Schema['Order']['type']>>([]);
+const orderItems = ref<Array<Schema['OrderItem']['type']>>([]);
+const inventory = ref<Array<Schema['Inventory']['type']>>([]);
 
 // Sparkline data computed from orders (always use hourly buckets)
 const sparklineData = computed(() => {
@@ -61,8 +63,6 @@ const sparklineLabels = computed(() => {
   });
 });
 
-
-
 // Statistics computed from orders
 const totalSales = computed(() => {
   return orders.value
@@ -80,10 +80,57 @@ const averageOrderValue = computed(() => {
   return totalSales.value / completed.length;
 });
 
+const totalProfit = computed(() => {
+  const completedOrders = orders.value.filter(order => order.status?.toLowerCase() === 'completed');
+  if (completedOrders.length === 0) return 0;
+
+  let totalProfitAmount = 0;
+
+  // Create a map of latest inventory by productId for purchase prices
+  const latestInventoryByProduct = new Map<string, Schema['Inventory']['type']>();
+  inventory.value.forEach(inv => {
+    const existing = latestInventoryByProduct.get(inv.productId);
+    if (!existing || (inv.lastUpdated ?? 0) > (existing.lastUpdated ?? 0)) {
+      latestInventoryByProduct.set(inv.productId, inv);
+    }
+  });
+
+  // Calculate profit for each order item
+  const completedOrderIds = new Set(completedOrders.map(o => o.id));
+  const relevantOrderItems = orderItems.value.filter(item => completedOrderIds.has(item.orderId));
+
+  relevantOrderItems.forEach(item => {
+    const unitPrice = item.unitPrice ?? 0;
+    const quantity = item.quantity ?? 0;
+    const purchasePrice = latestInventoryByProduct.get(item.productId)?.purchasePrice ?? 0;
+
+    const profitPerUnit = unitPrice - purchasePrice;
+    totalProfitAmount += profitPerUnit * quantity;
+  });
+
+  return totalProfitAmount;
+});
+
 function listOrders() {
   client.models.Order.observeQuery().subscribe({
     next: ({ items }) => {
       orders.value = items;
+    },
+  });
+}
+
+function listOrderItems() {
+  client.models.OrderItem.observeQuery().subscribe({
+    next: ({ items }) => {
+      orderItems.value = items;
+    },
+  });
+}
+
+function listInventory() {
+  client.models.Inventory.observeQuery().subscribe({
+    next: ({ items }) => {
+      inventory.value = items;
     },
   });
 }
@@ -94,6 +141,8 @@ function formatCurrency(amount: number | null | undefined): string {
 
 onMounted(() => {
   listOrders();
+  listOrderItems();
+  listInventory();
 });
 </script>
 
@@ -103,6 +152,10 @@ onMounted(() => {
       <div class="stat-card">
         <div class="stat-value">{{ formatCurrency(totalSales) }}</div>
         <div class="stat-label">Total Sales</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ formatCurrency(totalProfit) }}</div>
+        <div class="stat-label">Total Profit</div>
       </div>
 
       <div class="stat-card">
@@ -114,6 +167,7 @@ onMounted(() => {
         <div class="stat-value">{{ formatCurrency(averageOrderValue) }}</div>
         <div class="stat-label">Average Order Value</div>
       </div>
+
     </div>
 
     <div class="sparkline-container">
@@ -154,8 +208,8 @@ onMounted(() => {
 
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   margin-bottom: 32px;
 }
 
@@ -163,20 +217,20 @@ onMounted(() => {
   background-color: #f8fafc;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  padding: 24px;
+  padding: 16px;
   border: 1px solid #e5e7eb;
   text-align: center;
 }
 
 .stat-value {
-  font-size: 2.2em;
+  font-size: 1.8em;
   font-weight: bold;
   color: #4a5568;
   margin-bottom: 8px;
 }
 
 .stat-label {
-  font-size: 0.9em;
+  font-size: 0.8em;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -219,10 +273,39 @@ onMounted(() => {
 }
 
 /* Responsive design */
+@media (max-width: 1024px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
 @media (max-width: 768px) {
   .stats-cards {
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 1.5em;
+  }
+
+  .stat-label {
+    font-size: 0.75em;
+  }
+
+  .sparkline-container {
+    padding: 16px;
+  }
+
+}
+
+@media (max-width: 480px) {
+  .stats-cards {
+    grid-template-columns: 1fr;
   }
 
   .stat-card {
@@ -232,15 +315,6 @@ onMounted(() => {
   .stat-value {
     font-size: 1.8em;
   }
-
-  .sparkline-container {
-    padding: 16px;
-  }
 }
 
-@media (max-width: 480px) {
-  .stats-cards {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

@@ -51,7 +51,6 @@ function listInventory() {
         }
       }
       const collapsed = Array.from(latestByProduct.values());
-      // Sort most recently updated first (optional)
       inventoryItems.value = collapsed.sort((a, b) => (b.lastUpdated ?? 0) - (a.lastUpdated ?? 0));
     },
   });
@@ -97,7 +96,6 @@ async function saveInventory() {
         lastUpdated: Date.now(),
       });
     } else {
-      // Create new inventory (existing logic)
       const existing = await findExistingInventoryByProduct(selectedProductId.value);
 
       if (existing) {
@@ -137,7 +135,6 @@ function startEdit(inventory: Schema['Inventory']["type"]) {
 
   showForm.value = true;
 
-  // Scroll to top to show the edit form
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
@@ -238,25 +235,39 @@ onMounted(() => {
           v-for="inv in inventoryItems"
           :key="inv.id ?? `${inv.productId}-${inv.lastUpdated}`"
       >
-        <div class="inventory-details">
-          <div class="inventory-info">
-            <div class="product-name">
-              {{ productNameById.get(inv.productId) ?? inv.productId }}
-            </div>
-            <div class="product-id">ID: {{ inv.productId }}</div>
-            <div class="stock-level">Stock: {{ inv.stockLevel }}</div>
-            <div class="purchase-price" v-if="inv.purchasePrice !== null && inv.purchasePrice !== undefined">
-              Purchase Price: ${{ inv.purchasePrice.toFixed(2) }}
-            </div>
-            <div class="total-value" v-if="inv.purchasePrice !== null && inv.purchasePrice !== undefined">
-              Total Value: ${{ (inv.purchasePrice * inv.stockLevel).toFixed(2) }}
+        <div class="inventory-item">
+          <div class="item-header">
+            <div class="product-info">
+              <div class="product-name">
+                {{ productNameById.get(inv.productId) ?? inv.productId }}
+              </div>
+              <div class="product-id">ID: {{ inv.productId }}</div>
             </div>
             <div class="last-updated">
-              Updated: {{ inv.lastUpdated ? new Date(inv.lastUpdated).toLocaleString() : '—' }}
+              {{ inv.lastUpdated ? new Date(inv.lastUpdated).toLocaleString() : '—' }}
             </div>
           </div>
-          <div class="inventory-actions">
-            <button @click="startEdit(inv)" class="edit-btn">Edit</button>
+
+          <div class="item-details">
+            <div class="stock-info">
+              <span class="stock-label">Stock:</span>
+              <span class="stock-value">{{ inv.stockLevel }}</span>
+            </div>
+
+            <div class="price-info" v-if="inv.purchasePrice !== null && inv.purchasePrice !== undefined">
+              <div class="price-item">
+                <span class="price-label">Unit:</span>
+                <span class="price-value">{{ inv.purchasePrice.toFixed(2) }} kr</span>
+              </div>
+              <div class="price-item">
+                <span class="price-label">Total:</span>
+                <span class="total-value">{{ (inv.purchasePrice * inv.stockLevel).toFixed(2) }} kr</span>
+              </div>
+            </div>
+
+            <div class="item-actions">
+              <button @click="startEdit(inv)" class="edit-btn">Edit</button>
+            </div>
           </div>
         </div>
       </li>
@@ -331,18 +342,24 @@ select:disabled {
   margin-bottom: 10px;
 }
 
-.inventory-details {
+/* Compact inventory item layout */
+.inventory-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.item-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  margin-bottom: 12px;
   gap: 16px;
-  flex-wrap: nowrap;
 }
 
-.inventory-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.product-info {
   flex: 1;
   min-width: 0;
 }
@@ -350,37 +367,86 @@ select:disabled {
 .product-name {
   font-weight: bold;
   font-size: 1.1em;
+  color: #1f2937;
+  margin-bottom: 4px;
 }
 
-.product-id, .last-updated {
+.product-id {
   font-size: 0.9em;
-  color: #666;
+  color: #6b7280;
 }
 
-.stock-level, .purchase-price, .total-value {
-  font-weight: 500;
+.last-updated {
+  font-size: 0.8em;
+  color: #9ca3af;
+  text-align: right;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.item-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.stock-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stock-label {
+  font-size: 0.9em;
+  color: #6b7280;
+}
+
+.stock-value {
+  font-weight: 600;
   color: #4a5568;
+  font-size: 1.1em;
 }
 
-.purchase-price {
+.price-info {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.price-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.price-label {
+  font-size: 0.8em;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.price-value {
+  font-weight: 500;
   color: #059669;
+  font-size: 0.95em;
 }
 
 .total-value {
-  color: #7c2d12;
   font-weight: 600;
+  color: #7c2d12;
+  font-size: 0.95em;
 }
 
-.inventory-actions {
-  display: flex;
-  gap: 8px;
+.item-actions {
   flex-shrink: 0;
 }
 
 .edit-btn {
   background-color: #3b82f6;
   color: white;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -400,14 +466,57 @@ select:disabled {
 
 /* Mobile responsiveness */
 @media (max-width: 640px) {
-  .inventory-details {
-    flex-direction: row;
+  .inventory-item {
+    padding: 12px;
+  }
+
+  .item-header {
     gap: 8px;
   }
 
+  .last-updated {
+    font-size: 0.75em;
+    max-width: 80px;
+    word-break: break-word;
+  }
+
+  .item-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .price-info {
+    align-self: stretch;
+    justify-content: space-around;
+  }
+
+  .stock-info {
+    align-self: flex-start;
+  }
+
+  .item-actions {
+    align-self: stretch;
+  }
+
   .edit-btn {
-    padding: 8px 12px;
-    font-size: 0.85em;
+    width: 100%;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .price-info {
+    gap: 12px;
+  }
+
+  .price-item {
+    flex: 1;
+  }
+
+  .last-updated {
+    font-size: 0.7em;
+    max-width: 70px;
   }
 }
 </style>
