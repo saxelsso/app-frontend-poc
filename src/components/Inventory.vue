@@ -8,6 +8,7 @@ const client = generateClient<Schema>();
 // Form state
 const selectedProductId = ref<string>('');
 const stockLevel = ref<number | null>(null);
+const purchasePrice = ref<number | null>(null);
 const showForm = ref<boolean>(false);
 const formError = ref<string>('');
 
@@ -65,6 +66,10 @@ function validateForm(): boolean {
     formError.value = 'Stock level must be a non-negative integer';
     return false;
   }
+  if (purchasePrice.value !== null && (isNaN(purchasePrice.value) || purchasePrice.value < 0)) {
+    formError.value = 'Purchase price must be a non-negative number';
+    return false;
+  }
   formError.value = '';
   return true;
 }
@@ -88,6 +93,7 @@ async function saveInventory() {
       await client.models.Inventory.update({
         id: editingInventory.value.id,
         stockLevel: stockLevel.value as number,
+        purchasePrice: purchasePrice.value,
         lastUpdated: Date.now(),
       });
     } else {
@@ -98,12 +104,14 @@ async function saveInventory() {
         await client.models.Inventory.update({
           id: existing.id,
           stockLevel: stockLevel.value as number,
+          purchasePrice: purchasePrice.value,
           lastUpdated: Date.now(),
         });
       } else {
         await client.models.Inventory.create({
           productId: selectedProductId.value,
           stockLevel: stockLevel.value as number,
+          purchasePrice: purchasePrice.value,
           lastUpdated: Date.now(),
         });
       }
@@ -125,6 +133,7 @@ function startEdit(inventory: Schema['Inventory']["type"]) {
   // Pre-fill form with inventory data
   selectedProductId.value = inventory.productId;
   stockLevel.value = inventory.stockLevel;
+  purchasePrice.value = inventory.purchasePrice ?? null;
 
   showForm.value = true;
 
@@ -138,6 +147,7 @@ function startEdit(inventory: Schema['Inventory']["type"]) {
 function resetForm() {
   selectedProductId.value = '';
   stockLevel.value = null;
+  purchasePrice.value = null;
   formError.value = '';
   editingInventory.value = null;
   isEditMode.value = false;
@@ -199,6 +209,18 @@ onMounted(() => {
             required
         />
       </div>
+      <div class="form-group">
+        <label for="purchasePrice">Purchase Price (per unit)</label>
+        <input
+            id="purchasePrice"
+            v-model.number="purchasePrice"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Enter purchase price"
+        />
+        <small class="help-text">Optional: Cost per unit when acquired</small>
+      </div>
 
       <div v-if="formError" class="error-message">{{ formError }}</div>
 
@@ -223,6 +245,12 @@ onMounted(() => {
             </div>
             <div class="product-id">ID: {{ inv.productId }}</div>
             <div class="stock-level">Stock: {{ inv.stockLevel }}</div>
+            <div class="purchase-price" v-if="inv.purchasePrice !== null && inv.purchasePrice !== undefined">
+              Purchase Price: ${{ inv.purchasePrice.toFixed(2) }}
+            </div>
+            <div class="total-value" v-if="inv.purchasePrice !== null && inv.purchasePrice !== undefined">
+              Total Value: ${{ (inv.purchasePrice * inv.stockLevel).toFixed(2) }}
+            </div>
             <div class="last-updated">
               Updated: {{ inv.lastUpdated ? new Date(inv.lastUpdated).toLocaleString() : '—' }}
             </div>
@@ -329,9 +357,18 @@ select:disabled {
   color: #666;
 }
 
-.stock-level {
+.stock-level, .purchase-price, .total-value {
   font-weight: 500;
   color: #4a5568;
+}
+
+.purchase-price {
+  color: #059669;
+}
+
+.total-value {
+  color: #7c2d12;
+  font-weight: 600;
 }
 
 .inventory-actions {

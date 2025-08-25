@@ -51,6 +51,7 @@ const schema = a.schema({
         .model({
             productId: a.string().required(),
             stockLevel: a.integer().required(),
+            purchasePrice: a.float(),
             lastUpdated: a.timestamp(),
             product: a.belongsTo('Product', 'productId'), // Foreign key relationship
         })
