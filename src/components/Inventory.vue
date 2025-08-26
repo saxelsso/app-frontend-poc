@@ -230,48 +230,47 @@ onMounted(() => {
     </div>
 
     <h3 v-if="!showForm">Inventory</h3>
-    <ul v-if="inventoryItems.length > 0">
-      <li
+    <div v-if="inventoryItems.length > 0" class="inventory-grid">
+      <div
           v-for="inv in inventoryItems"
           :key="inv.id ?? `${inv.productId}-${inv.lastUpdated}`"
+          class="inventory-card"
       >
-        <div class="inventory-item">
-          <div class="item-header">
-            <div class="product-info">
-              <div class="product-name">
-                {{ productNameById.get(inv.productId) ?? inv.productId }}
-              </div>
-              <div class="product-id">ID: {{ inv.productId }}</div>
-            </div>
-            <div class="last-updated">
-              {{ inv.lastUpdated ? new Date(inv.lastUpdated).toLocaleString() : '—' }}
-            </div>
+        <div class="card-header">
+          <div class="product-name">
+            {{ productNameById.get(inv.productId) ?? inv.productId }}
           </div>
+          <button @click="startEdit(inv)" class="edit-btn">Edit</button>
+        </div>
 
-          <div class="item-details">
-            <div class="stock-info">
-              <span class="stock-label">Stock:</span>
-              <span class="stock-value">{{ inv.stockLevel }}</span>
+        <div class="card-meta">
+          <span class="product-id">ID: {{ inv.productId }}</span>
+          <span class="update-date">{{ inv.lastUpdated ? new Date(inv.lastUpdated).toLocaleString() : '—' }}</span>
+        </div>
+
+        <div class="card-info">
+          <div class="info-row">
+            <div class="info-item stock-item">
+              <span class="label">Stock:</span>
+              <span class="value stock">{{ inv.stockLevel }}</span>
             </div>
 
-            <div class="price-info" v-if="inv.purchasePrice !== null && inv.purchasePrice !== undefined">
-              <div class="price-item">
-                <span class="price-label">Unit:</span>
-                <span class="price-value">{{ inv.purchasePrice.toFixed(2) }} kr</span>
+            <template v-if="inv.purchasePrice !== null && inv.purchasePrice !== undefined">
+              <div class="info-item">
+                <span class="label">Unit cost:</span>
+                <span class="value price">{{ inv.purchasePrice.toFixed(2) }} kr</span>
               </div>
-              <div class="price-item">
-                <span class="price-label">Total:</span>
-                <span class="total-value">{{ (inv.purchasePrice * inv.stockLevel).toFixed(2) }} kr</span>
-              </div>
-            </div>
 
-            <div class="item-actions">
-              <button @click="startEdit(inv)" class="edit-btn">Edit</button>
-            </div>
+              <div class="info-item">
+                <span class="label">Total value:</span>
+                <span class="value total">{{ (inv.purchasePrice * inv.stockLevel).toFixed(2) }} kr</span>
+              </div>
+            </template>
           </div>
         </div>
-      </li>
-    </ul>
+
+      </div>
+    </div>
     <p v-else-if="!showForm">No inventory yet. Add one!</p>
   </div>
 </template>
@@ -342,181 +341,155 @@ select:disabled {
   margin-bottom: 10px;
 }
 
-/* Compact inventory item layout */
-.inventory-item {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
-}
-
-.item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-  gap: 16px;
-}
-
-.product-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.product-name {
-  font-weight: bold;
-  font-size: 1.1em;
-  color: #1f2937;
-  margin-bottom: 4px;
-}
-
-.product-id {
-  font-size: 0.9em;
-  color: #6b7280;
-}
-
-.last-updated {
-  font-size: 0.8em;
-  color: #9ca3af;
-  text-align: right;
-  flex-shrink: 0;
-  line-height: 1.2;
-}
-
-.item-details {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.stock-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.stock-label {
-  font-size: 0.9em;
-  color: #6b7280;
-}
-
-.stock-value {
-  font-weight: 600;
-  color: #4a5568;
-  font-size: 1.1em;
-}
-
-.price-info {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.price-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.price-label {
-  font-size: 0.8em;
-  color: #6b7280;
-  margin-bottom: 2px;
-}
-
-.price-value {
-  font-weight: 500;
-  color: #059669;
-  font-size: 0.95em;
-}
-
-.total-value {
-  font-weight: 600;
-  color: #7c2d12;
-  font-size: 0.95em;
-}
-
-.item-actions {
-  flex-shrink: 0;
-}
-
-.edit-btn {
-  background-color: #3b82f6;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  margin: 0;
-}
-
-.edit-btn:hover {
-  background-color: #2563eb;
-}
-
 .form-actions {
   display: flex;
   gap: 8px;
   margin-top: 16px;
 }
 
+/* Improved inventory listing */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 0;
+  background: transparent;
+}
+
+.inventory-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+/* Vuetify theme color hover effect */
+.inventory-card:hover {
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.15);
+  border-color: rgb(25, 118, 210, 0.3);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.product-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 8px;
+}
+
+.update-date {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stock-item {
+  min-width: 70px;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.value {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.value.stock {
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.value.price {
+  color: #059669;
+}
+
+.value.total {
+  color: #7c2d12;
+  font-weight: 600;
+}
+
+
+.edit-btn {
+  background-color: #3b82f6;
+  color: white;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin: 0;
+  height: 32px;
+}
+
+.edit-btn:hover {
+  background-color: #2563eb;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 640px) {
-  .inventory-item {
-    padding: 12px;
+  .inventory-grid {
+    grid-template-columns: 1fr;
   }
 
-  .item-header {
-    gap: 8px;
+  .card-info {
+    gap: 10px;
   }
-
-  .last-updated {
-    font-size: 0.75em;
-    max-width: 80px;
-    word-break: break-word;
-  }
-
-  .item-details {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .price-info {
-    align-self: stretch;
+  .info-row {
     justify-content: space-around;
   }
 
-  .stock-info {
-    align-self: flex-start;
-  }
-
-  .item-actions {
-    align-self: stretch;
-  }
-
-  .edit-btn {
-    width: 100%;
-    padding: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .price-info {
-    gap: 12px;
-  }
-
-  .price-item {
+  .info-item {
+    text-align: center;
+    align-items: center;
     flex: 1;
   }
 
-  .last-updated {
-    font-size: 0.7em;
-    max-width: 70px;
+  .stock-item {
+    min-width: unset;
   }
+
 }
 </style>

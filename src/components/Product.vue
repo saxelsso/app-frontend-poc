@@ -274,6 +274,7 @@ onMounted(() => {
         <button @click="cancelEdit" class="cancel-btn">Cancel</button>
       </div>
     </div>
+
     <!-- Scanner Component -->
     <BarcodeScanner
         v-model:show="showScanner"
@@ -282,33 +283,40 @@ onMounted(() => {
     />
 
     <h3 v-if="!showForm">Products</h3>
-    <ul v-if="products.length > 0">
-      <li
+    <div v-if="products.length > 0" class="products-grid">
+      <div
           v-for="product in products"
-          :key="product.productId">
-        <div class="product-details">
-          <div class="product-info">
-            <div class="product-id">ID: {{ product.productId }}</div>
-            <div class="product-name">{{ product.productName }}</div>
-            <div class="product-price">{{ product.listPrice?.toFixed(2) ?? '0.00' }} kr</div>
-            <div class="product-barcode" v-if="product.barcode">Barcode: {{ product.barcode }}</div>
+          :key="product.productId"
+          class="product-card">
+        <div class="card-header">
+          <div class="product-name">{{ product.productName }}</div>
+          <button @click="startEdit(product)" class="edit-btn">Edit</button>
+        </div>
 
-          </div>
-          <div class="product-actions">
-            <v-checkbox
-                :model-value="product.isSellable"
-                :label="product.isSellable ? 'Sellable' : 'Sellable'"
-                color="success"
-                readonly
-                density="compact"
-                hide-details
-            ></v-checkbox>
+        <div class="card-meta">
+          <span class="product-id">ID: {{ product.productId }}</span>
+          <span class="sellable-badge" :class="{ 'is-sellable': product.isSellable }">
+            {{ product.isSellable ? 'Sellable' : 'Not sellable' }}
+          </span>
+        </div>
 
-            <button @click="startEdit(product)" class="edit-btn">Edit</button>
+        <div class="card-info">
+          <div class="info-row">
+            <div class="info-item" v-if="product.barcode">
+              <span class="label">Barcode:</span>
+              <span class="value">{{ product.barcode }}</span>
+            </div>
+
+            <div class="info-item">
+              <span class="label">Price:</span>
+              <span class="value price">{{ product.listPrice?.toFixed(2) ?? '0.00' }} kr</span>
+            </div>
+
           </div>
         </div>
-      </li>
-    </ul>
+
+      </div>
+    </div>
     <p v-else-if="!showForm">No products yet. Add one!</p>
   </div>
 </template>
@@ -405,18 +413,6 @@ input {
   background-color: #1565C0; /* Darker blue on hover */
 }
 
-/* Ensure the layout works well on very small screens */
-@media (max-width: 320px) {
-  .barcode-input-group {
-    gap: 4px; /* Reduce gap on very small screens */
-  }
-
-  .scan-btn {
-    padding: 8px 8px; /* Slightly reduce padding on very small screens */
-    min-width: 40px;
-  }
-}
-
 .submit-btn {
   background-color: #4a5568;
   color: white;
@@ -433,91 +429,160 @@ input {
   margin-bottom: 10px;
 }
 
-.product-details {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: nowrap;
-}
-
-.product-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-}
-
-.product-name {
-  font-weight: bold;
-  font-size: 1.1em;
-}
-
-.product-id {
-  font-size: 0.9em;
-  color: #666;
-}
-
-.product-price {
-  font-weight: 500;
-  color: #4a5568;
-}
-
-.product-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.edit-btn {
-  background-color: #3b82f6;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  margin: 0;
-}
-
-.edit-btn:hover {
-  background-color: #2563eb;
-}
-
 .form-actions {
   display: flex;
   gap: 8px;
   margin-top: 16px;
 }
 
-.product-barcode {
-  font-size: 0.9em;
-  color: #666;
+/* Improved card-based grid layout */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 0;
+  background: transparent;
+}
+
+.product-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+/* Vuetify theme color hover effect */
+.product-card:hover {
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.15);
+  border-color: rgb(25, 118, 210, 0.3);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.product-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 8px;
+}
+
+.sellable-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.sellable-badge.is-sellable {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.value {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #4a5568;
+}
+
+.value.price {
+  color: #059669;
+  font-weight: 600;
+}
+
+
+.edit-btn {
+  background-color: #3b82f6;
+  color: white;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin: 0;
+  height: 32px;
+}
+
+.edit-btn:hover {
+  background-color: #2563eb;
+}
+
+/* Ensure the layout works well on very small screens */
+@media (max-width: 320px) {
+  .barcode-input-group {
+    gap: 4px; /* Reduce gap on very small screens */
+  }
+
+  .scan-btn {
+    padding: 8px 8px; /* Slightly reduce padding on very small screens */
+    min-width: 40px;
+  }
 }
 
 /* Mobile responsiveness */
 @media (max-width: 640px) {
-  .product-details {
-    flex-direction: row; /* Keep row direction instead of column */
-    gap: 8px; /* Reduce gap for tighter spacing */
-    /* align-items: center; /* Center align items vertically */
+  .products-grid {
+    grid-template-columns: 1fr;
   }
 
-  .product-actions {
-    /* Remove align-self as it's not needed anymore */
+  .card-info {
+    gap: 10px;
+  }
+  .info-row {
+    justify-content: space-around;
   }
 
-  .edit-btn {
-    padding: 8px 12px; /* Slightly smaller padding for narrow screens */
-    font-size: 0.85em; /* Slightly smaller font */
-  }
-
-  .scan-btn {
-    align-self: flex-start;
-    width: fit-content;
+  .info-item {
+    text-align: center;
+    align-items: center;
+    flex: 1;
   }
 
 }
-
 </style>
