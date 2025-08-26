@@ -80,6 +80,16 @@ const schema = a.schema({
         })
         .authorization(allow => [allow.owner()]),
 
+    Notes: a
+        .model({
+            date: a.string().required(), // Date in YYYY-MM-DD format
+            noteText: a.string().required(), // Text note content (max 200 chars)
+            createdAt: a.timestamp(),
+            updatedAt: a.timestamp(),
+        })
+        .authorization(allow => [allow.owner()])
+        .identifier(['date']),
+
 
 });
 

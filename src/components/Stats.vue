@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import type { Schema } from '../../amplify/data/resource';
 import { generateClient } from 'aws-amplify/data';
 import { Line } from 'vue-chartjs';
@@ -36,6 +36,115 @@ const inventory = ref<Array<Schema['Inventory']['type']>>([]);
 
 // Selected date for the chart (defaults to today)
 const selectedDate = ref(new Date().toISOString().split('T')[0]);
+
+// Notes functionality
+const currentNote = ref<Schema['Notes']['type'] | null>(null);
+const noteText = ref('');
+const isEditingNote = ref(false);
+const maxNoteLength = 200;
+
+// Watch for selectedDate changes to load the note for that date
+watch(selectedDate, async (newDate) => {
+  await loadNoteForDate(newDate);
+});
+
+// Load note for the given date
+async function loadNoteForDate(date: string) {
+  try {
+    const noteResponse = await client.models.Notes.get({ date });
+    if (noteResponse.data) {
+      currentNote.value = noteResponse.data;
+      noteText.value = noteResponse.data.noteText || '';
+    } else {
+      currentNote.value = null;
+      noteText.value = '';
+    }
+  } catch (error) {
+    console.log('No note found for date:', date);
+    currentNote.value = null;
+    noteText.value = '';
+  }
+  isEditingNote.value = false;
+}
+
+// Save or update note
+async function saveNote() {
+  if (noteText.value.trim().length === 0) {
+    // If note is empty, delete it if it exists
+    if (currentNote.value) {
+      await deleteNote();
+    }
+    return;
+  }
+
+  if (noteText.value.length > maxNoteLength) {
+    alert(`Note cannot exceed ${maxNoteLength} characters.`);
+    return;
+  }
+
+  try {
+    const now = Date.now();
+
+    if (currentNote.value) {
+      // Update existing note
+      const updatedNote = await client.models.Notes.update({
+        date: selectedDate.value,
+        noteText: noteText.value.trim(),
+        updatedAt: now,
+      });
+      currentNote.value = updatedNote.data;
+    } else {
+      // Create new note
+      const newNote = await client.models.Notes.create({
+        date: selectedDate.value,
+        noteText: noteText.value.trim(),
+        createdAt: now,
+        updatedAt: now,
+      });
+      currentNote.value = newNote.data;
+    }
+
+    isEditingNote.value = false;
+  } catch (error) {
+    console.error('Error saving note:', error);
+    alert('Error saving note. Please try again.');
+  }
+}
+
+// Delete note
+async function deleteNote() {
+  if (!currentNote.value) return;
+
+  try {
+    await client.models.Notes.delete({ date: selectedDate.value });
+    currentNote.value = null;
+    noteText.value = '';
+    isEditingNote.value = false;
+  } catch (error) {
+    console.error('Error deleting note:', error);
+    alert('Error deleting note. Please try again.');
+  }
+}
+
+// Start editing note
+function startEditingNote() {
+  isEditingNote.value = true;
+}
+
+// Cancel editing note
+function cancelEditingNote() {
+  if (currentNote.value) {
+    noteText.value = currentNote.value.noteText || '';
+  } else {
+    noteText.value = '';
+  }
+  isEditingNote.value = false;
+}
+
+// Computed property for remaining characters
+const remainingChars = computed(() => {
+  return maxNoteLength - noteText.value.length;
+});
 
 // Chart data computed from orders for the selected date
 const chartData = computed(() => {
@@ -247,10 +356,11 @@ function formatCurrency(amount: number | null | undefined): string {
   return `${(amount ?? 0).toFixed(2)} kr`;
 }
 
-onMounted(() => {
+onMounted(async () => {
   listOrders();
   listOrderItems();
   listInventory();
+  await loadNoteForDate(selectedDate.value);
 });
 </script>
 
@@ -276,6 +386,46 @@ onMounted(() => {
         <div class="stat-label">Average Order Value</div>
       </div>
 
+    </div>
+
+    <!-- Daily Note Card -->
+    <div class="note-card">
+      <div class="note-header">
+        <h4>Daily Note</h4>
+        <div class="note-date">{{ selectedDate }}</div>
+      </div>
+
+      <div v-if="!isEditingNote && !currentNote" class="no-note">
+        <p>No note for this date.</p>
+        <button @click="startEditingNote" class="btn btn-primary">Add Note</button>
+      </div>
+
+      <div v-if="!isEditingNote && currentNote" class="note-display">
+        <p class="note-text">{{ currentNote.noteText }}</p>
+        <div class="note-actions">
+          <button @click="startEditingNote" class="btn btn-secondary">Edit</button>
+          <button @click="deleteNote" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+
+      <div v-if="isEditingNote" class="note-edit">
+        <textarea
+            v-model="noteText"
+            :maxlength="maxNoteLength"
+            placeholder="Enter your daily note..."
+            class="note-textarea"
+            rows="4"
+        ></textarea>
+        <div class="note-edit-footer">
+          <div class="char-counter" :class="{ 'char-limit-warning': remainingChars < 20 }">
+            {{ remainingChars }} characters remaining
+          </div>
+          <div class="note-edit-actions">
+            <button @click="cancelEditingNote" class="btn btn-secondary">Cancel</button>
+            <button @click="saveNote" class="btn btn-primary">Save</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="chart-container">
@@ -336,6 +486,155 @@ onMounted(() => {
   color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Note Card Styles */
+.note-card {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 32px;
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.note-header h4 {
+  margin: 0;
+  color: #4a5568;
+  font-size: 1.3em;
+}
+
+.note-date {
+  font-size: 0.9em;
+  color: #666;
+  font-weight: 500;
+}
+
+.no-note {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+}
+
+.no-note p {
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.note-display {
+  color: #4a5568;
+}
+
+.note-text {
+  background-color: white;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.note-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.note-edit {
+  width: 100%;
+}
+
+.note-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95em;
+  color: #4a5568;
+  background-color: white;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.note-textarea:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.note-edit-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.char-counter {
+  font-size: 0.85em;
+  color: #6b7280;
+}
+
+.char-limit-warning {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.note-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Button Styles */
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #16a34a;
+  color: white;
+  border-color: #16a34a;
+}
+
+.btn-primary:hover {
+  background-color: #15803d;
+  border-color: #15803d;
+}
+
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+  border-color: #6b7280;
+}
+
+.btn-secondary:hover {
+  background-color: #4b5563;
+  border-color: #4b5563;
+}
+
+.btn-danger {
+  background-color: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .chart-container {
@@ -431,6 +730,7 @@ onMounted(() => {
     font-size: 0.75em;
   }
 
+  .note-card,
   .chart-container {
     padding: 16px;
   }
@@ -442,6 +742,27 @@ onMounted(() => {
 
   .chart-wrapper {
     height: 250px;
+  }
+
+  .note-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .note-actions,
+  .note-edit-actions {
+    justify-content: center;
+  }
+
+  .note-edit-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .char-counter {
+    text-align: center;
   }
 }
 
