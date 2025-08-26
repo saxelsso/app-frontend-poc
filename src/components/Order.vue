@@ -361,8 +361,6 @@ async function submitOrder() {
 
 <template>
   <div class="sell-container">
-
-
     <div class="lines">
       <div
           class="line"
@@ -373,7 +371,7 @@ async function submitOrder() {
           <label>Product</label>
           <div class="product-input-group">
             <select v-model="l.productId" @change="onProductSelected($event, idx)">
-            <option value="">Select a product</option>
+              <option value="">Select a product</option>
               <option
                   v-for="p in products"
                   :key="p.productId"
@@ -489,9 +487,11 @@ async function submitOrder() {
 .sell-container {
   width: 100%;
   margin: 0 auto;
-  background-color: #f8fafc;
+  background-color: white;
   border-radius: 8px;
   padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
 }
 
 .lines {
@@ -508,6 +508,14 @@ async function submitOrder() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  transition: all 0.2s ease;
+}
+
+/* Vuetify theme color hover effect */
+.line:hover {
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.15);
+  border-color: rgb(25, 118, 210, 0.3);
+  transform: translateY(-2px);
 }
 
 .product-field {
@@ -567,6 +575,7 @@ async function submitOrder() {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: background-color 0.2s ease;
 }
 
 .remove-btn:hover {
@@ -610,6 +619,11 @@ async function submitOrder() {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover {
+  background-color: #2d3748;
 }
 
 .reset-btn {
@@ -618,6 +632,11 @@ async function submitOrder() {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.reset-btn:hover {
+  background-color: #d1d5db;
 }
 
 .product-input-group {
@@ -647,6 +666,7 @@ async function submitOrder() {
   justify-content: center;
   min-width: 44px;
   flex-shrink: 0;
+  transition: background-color 0.2s ease;
 }
 
 .scan-btn:hover {
@@ -785,11 +805,8 @@ async function submitOrder() {
 }
 
 @media (max-width: 640px) {
-
   .qty-stepper {
     gap: 4px;
   }
 }
-
-
 </style>

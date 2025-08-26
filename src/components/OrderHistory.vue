@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue';
 import type { Schema } from '../../amplify/data/resource';
@@ -158,11 +159,19 @@ onMounted(() => {
 }
 
 .order-card {
-  background-color: #f8fafc;
+  background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 20px;
   border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+/* Vuetify theme color hover effect */
+.order-card:hover {
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.15);
+  border-color: rgb(25, 118, 210, 0.3);
+  transform: translateY(-2px);
 }
 
 .order-header {
@@ -214,6 +223,8 @@ onMounted(() => {
   background: #fff;
   border-radius: 6px;
   padding: 16px;
+  border: 1px solid #f3f4f6;
+  margin-top: 10px;
 }
 
 .items-header {
