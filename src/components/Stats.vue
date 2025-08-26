@@ -34,58 +34,46 @@ const orders = ref<Array<Schema['Order']['type']>>([]);
 const orderItems = ref<Array<Schema['OrderItem']['type']>>([]);
 const inventory = ref<Array<Schema['Inventory']['type']>>([]);
 
-// Chart data computed from orders
-// Chart data computed from orders
+// Selected date for the chart (defaults to today)
+const selectedDate = ref(new Date().toISOString().split('T')[0]);
+
+// Chart data computed from orders for the selected date
 const chartData = computed(() => {
-  // Get completed orders and sort by date
+  // Get completed orders for the selected date
+  const selectedDateObj = new Date(selectedDate.value);
+  const startOfDay = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate(), 0, 0, 0);
+  const endOfDay = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), selectedDateObj.getDate(), 23, 59, 59);
+
   const completedOrders = orders.value
-      .filter(order => order.status?.toLowerCase() === 'completed' && order.orderDate)
+      .filter(order => {
+        if (order.status?.toLowerCase() !== 'completed' || !order.orderDate) return false;
+        const orderDate = new Date(order.orderDate);
+        return orderDate >= startOfDay && orderDate <= endOfDay;
+      })
       .sort((a, b) => (a.orderDate ?? 0) - (b.orderDate ?? 0));
 
-  if (completedOrders.length === 0) {
-    return {
-      labels: [],
-      datasets: []
-    };
+  // Create hourly buckets (0-23)
+  const salesByHour = new Map<number, number>();
+  for (let hour = 0; hour < 24; hour++) {
+    salesByHour.set(hour, 0);
   }
 
-  // Group by hour
-  const salesByBucket = new Map<string, number>();
-  const dateTracker = new Set<string>();
-
+  // Group sales by hour
   completedOrders.forEach(order => {
     if (order.orderDate && order.totalAmount) {
       const date = new Date(order.orderDate);
-      // Always use hourly buckets for data
-      const bucketKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:00`;
-      const currentAmount = salesByBucket.get(bucketKey) ?? 0;
-      salesByBucket.set(bucketKey, currentAmount + order.totalAmount);
-
-      // Track unique dates for label formatting
-      const [datePart] = bucketKey.split(' ');
-      dateTracker.add(datePart);
+      const hour = date.getHours();
+      const currentAmount = salesByHour.get(hour) ?? 0;
+      salesByHour.set(hour, currentAmount + order.totalAmount);
     }
   });
 
-  // Format labels to avoid repeating dates
-  const bucketKeys = Array.from(salesByBucket.keys());
-  let lastDisplayedDate = '';
-
-  const labels = bucketKeys.map(k => {
-    const [datePart, timePart] = k.split(' ');
-    const [, month, day] = datePart.split('-');
-    const currentDate = `${month}-${day}`;
-
-    // Only show date if it's different from the last one
-    if (currentDate !== lastDisplayedDate) {
-      lastDisplayedDate = currentDate;
-      return `${currentDate}\n${timePart}`;
-    } else {
-      return timePart;
-    }
+  // Create labels and data arrays
+  const labels = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+  const data = Array.from({ length: 24 }, (_, i) => {
+    const value = salesByHour.get(i) ?? 0;
+    return Math.round(value * 100) / 100;
   });
-
-  const data = Array.from(salesByBucket.values()).map(value => Math.round(value * 100) / 100);
 
   return {
     labels,
@@ -135,7 +123,7 @@ const chartOptions = computed(() => ({
       },
       title: {
         display: true,
-        text: 'Date & Time',
+        text: 'Hour of Day',
         color: '#4a5568',
         font: {
           size: 12,
@@ -150,7 +138,7 @@ const chartOptions = computed(() => ({
         font: {
           size: 10
         },
-        maxTicksLimit: 10,
+        maxTicksLimit: 24,
         maxRotation: 0,
         minRotation: 0
       }
@@ -291,18 +279,25 @@ onMounted(() => {
     </div>
 
     <div class="chart-container">
-      <h4>Hourly Sales Trend</h4>
-      <div v-if="chartData.labels.length > 0" class="chart-wrapper">
+      <div class="chart-header">
+        <h4>Hourly Sales Trend</h4>
+        <div class="date-picker-container">
+          <label for="date-picker">Select Date:</label>
+          <input
+              id="date-picker"
+              type="date"
+              v-model="selectedDate"
+              class="date-picker"
+          />
+        </div>
+      </div>
+      <div class="chart-wrapper">
         <Line
             :data="chartData"
             :options="chartOptions"
         />
       </div>
-      <div v-else class="no-data">
-        <p>No sales data available yet. Complete some orders to see the sales trend!</p>
-      </div>
     </div>
-
 
   </div>
 </template>
@@ -351,10 +346,47 @@ onMounted(() => {
   border: 1px solid #e5e7eb;
 }
 
-.chart-container h4 {
-  margin: 0 0 20px 0;
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.chart-header h4 {
+  margin: 0;
   color: #4a5568;
   font-size: 1.3em;
+}
+
+.date-picker-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-picker-container label {
+  font-size: 0.9em;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.date-picker {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9em;
+  color: #4a5568;
+  background-color: white;
+  min-width: 140px;
+}
+
+.date-picker:focus {
+  outline: none;
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
 .chart-wrapper {
@@ -380,6 +412,7 @@ onMounted(() => {
     gap: 12px;
   }
 }
+
 @media (max-width: 768px) {
   .stats-cards {
     grid-template-columns: 1fr 1fr;
@@ -400,6 +433,11 @@ onMounted(() => {
 
   .chart-container {
     padding: 16px;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .chart-wrapper {
@@ -423,6 +461,14 @@ onMounted(() => {
   .chart-wrapper {
     height: 200px;
   }
-}
 
+  .date-picker-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-picker {
+    width: 100%;
+  }
+}
 </style>
