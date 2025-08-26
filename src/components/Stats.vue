@@ -388,6 +388,29 @@ onMounted(async () => {
 
     </div>
 
+
+
+    <div class="chart-container">
+      <div class="chart-header">
+        <h4>Hourly Sales Trend</h4>
+        <div class="date-picker-container">
+          <label for="date-picker">Select Date:</label>
+          <input
+              id="date-picker"
+              type="date"
+              v-model="selectedDate"
+              class="date-picker"
+          />
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <Line
+            :data="chartData"
+            :options="chartOptions"
+        />
+      </div>
+    </div>
+
     <!-- Daily Note Card -->
     <div class="note-card">
       <div class="note-header">
@@ -428,27 +451,6 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div class="chart-container">
-      <div class="chart-header">
-        <h4>Hourly Sales Trend</h4>
-        <div class="date-picker-container">
-          <label for="date-picker">Select Date:</label>
-          <input
-              id="date-picker"
-              type="date"
-              v-model="selectedDate"
-              class="date-picker"
-          />
-        </div>
-      </div>
-      <div class="chart-wrapper">
-        <Line
-            :data="chartData"
-            :options="chartOptions"
-        />
-      </div>
-    </div>
-
   </div>
 </template>
 
@@ -462,7 +464,7 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .stat-card {
@@ -643,6 +645,7 @@ onMounted(async () => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   padding: 24px;
   border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
 }
 
 .chart-header {
