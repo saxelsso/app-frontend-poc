@@ -42,6 +42,7 @@ const schema = a.schema({
             isSellable: a.boolean().required().default(false),
             inventory: a.hasMany('Inventory', 'productId'),
             orderItems: a.hasMany('OrderItem', 'productId'),
+            returnItems: a.hasMany('ReturnItem', 'productId'),
         })
         .authorization(allow => [allow.owner()])
         .identifier(['productId']), // Makes productId the primary key instead of auto-generated id
@@ -64,6 +65,7 @@ const schema = a.schema({
             totalAmount: a.float(),
             status: a.string(), // e.g., 'pending', 'completed', 'cancelled'
             orderItems: a.hasMany('OrderItem', 'orderId'), // One order can have many items
+            returns: a.hasMany('Return', 'orderId'),
         })
         .authorization(allow => [allow.owner()]),
 
@@ -76,6 +78,35 @@ const schema = a.schema({
             unitPrice: a.float().required(),
             subtotal: a.float().required(),
             order: a.belongsTo('Order', 'orderId'),
+            product: a.belongsTo('Product', 'productId'),
+            returnItems: a.hasMany('ReturnItem', 'orderItemId'),
+        })
+        .authorization(allow => [allow.owner()]),
+
+    // Return table to track product returns
+    Return: a
+        .model({
+            orderId: a.string().required(), // Reference to original order
+            returnDate: a.timestamp().required(),
+            totalRefundAmount: a.float(),
+            status: a.string(), // e.g., 'pending', 'approved', 'refunded', 'rejected'
+            reason: a.string(), // Optional reason for return
+            returnItems: a.hasMany('ReturnItem', 'returnId'),
+            order: a.belongsTo('Order', 'orderId'),
+        })
+        .authorization(allow => [allow.owner()]),
+
+    // ReturnItem table to handle individual products being returned
+    ReturnItem: a
+        .model({
+            returnId: a.string().required(),
+            orderItemId: a.string().required(), // References the original OrderItem
+            productId: a.string().required(), // Denormalized for easier queries
+            quantityReturned: a.integer().required(),
+            refundAmount: a.float().required(), // Amount to refund for this item
+            condition: a.string(), // e.g., 'new', 'used', 'damaged'
+            return: a.belongsTo('Return', 'returnId'),
+            orderItem: a.belongsTo('OrderItem', 'orderItemId'),
             product: a.belongsTo('Product', 'productId'),
         })
         .authorization(allow => [allow.owner()]),
