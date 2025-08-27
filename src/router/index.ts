@@ -13,6 +13,7 @@ import InventoryView from '../views/InventoryView.vue';
 import OrderView from '../views/OrderView.vue';
 import OrderHistoryView from '../views/OrderHistoryView.vue';
 import StatsView from '../views/StatsView.vue';
+import ReturnView from '../views/ReturnView.vue';
 import { getCurrentUser } from 'aws-amplify/auth';
 //import { Auth } from 'aws-amplify';
 
@@ -82,6 +83,12 @@ const routes: Array<RouteRecordRaw> = [
         path: '/order',
         name: 'Order',
         component: OrderView,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/return',
+        name: 'Return',
+        component: ReturnView,
         meta: { requiresAuth: true }
     },
     {
