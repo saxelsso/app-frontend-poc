@@ -19,7 +19,7 @@ const existingReturns = ref<Return[]>([]);
 const existingReturnItems = ref<ReturnItem[]>([]);
 
 // Search state
-const orderIdSearch = ref<string>('');
+const orderNumberSearch = ref<string>('');
 const orderFound = ref<boolean>(false);
 
 // For return form lines
@@ -106,8 +106,8 @@ function decrementReturnQuantity(index: number) {
 
 // Search for order
 async function searchOrder() {
-  if (!orderIdSearch.value.trim()) {
-    formError.value = 'Please enter an Order ID';
+  if (!orderNumberSearch.value.trim()) {
+    formError.value = 'Please enter an Order Number';
     return;
   }
 
@@ -117,29 +117,33 @@ async function searchOrder() {
   orderFound.value = false;
 
   try {
-    console.log('🔍 Searching for order:', orderIdSearch.value);
+    console.log('🔍 Searching for order by number:', orderNumberSearch.value);
 
-    // Get the order
-    const orderResult = await client.models.Order.get({ id: orderIdSearch.value.trim() });
+    // First, find the order by orderNumber
+    const orderResults = await client.models.Order.list({
+      filter: { orderNumber: { eq: orderNumberSearch.value.trim() } }
+    });
 
-    if (!orderResult.data) {
-      formError.value = `Order ${orderIdSearch.value} not found`;
+    if (!orderResults.data || orderResults.data.length === 0) {
+      formError.value = `Order ${orderNumberSearch.value} not found`;
       return;
     }
 
-    selectedOrder.value = orderResult.data;
+    // Should only be one order with this number, but take the first one
+    const foundOrder = orderResults.data[0];
+    selectedOrder.value = foundOrder;
     console.log('📋 Found order:', selectedOrder.value);
 
-    // Get order items
+    // Get order items using the internal orderId
     const orderItemsResult = await client.models.OrderItem.list({
-      filter: { orderId: { eq: orderIdSearch.value.trim() } }
+      filter: { orderId: { eq: foundOrder.id } }
     });
     orderItems.value = orderItemsResult.data || [];
     console.log('📦 Order items:', orderItems.value);
 
-    // Get existing returns for this order
+    // Get existing returns for this order using the internal orderId
     const returnsResult = await client.models.Return.list({
-      filter: { orderId: { eq: orderIdSearch.value.trim() } }
+      filter: { orderId: { eq: foundOrder.id } }
     });
     existingReturns.value = returnsResult.data || [];
 
@@ -159,7 +163,6 @@ async function searchOrder() {
     } else {
       existingReturnItems.value = [];
     }
-
 
     // Build return lines from order items
     buildReturnLines();
@@ -211,7 +214,7 @@ function resetForm() {
   existingReturns.value = [];
   existingReturnItems.value = [];
   returnLines.splice(0, returnLines.length);
-  orderIdSearch.value = '';
+  orderNumberSearch.value = '';
   returnReason.value = '';
   orderFound.value = false;
   formError.value = '';
@@ -338,17 +341,17 @@ function formatCurrency(amount: number | null | undefined): string {
       <h3>Process Return</h3>
       <div class="search-form">
         <div class="field">
-          <label>Order ID</label>
+          <label>Order Number</label>
           <div class="search-input-group">
             <input
-                v-model="orderIdSearch"
+                v-model="orderNumberSearch"
                 type="text"
-                placeholder="Enter Order ID to search..."
+                placeholder="Enter Order Number (e.g., 250828-14354200)..."
                 @keyup.enter="searchOrder"
             >
             <button
                 @click="searchOrder"
-                :disabled="searching || !orderIdSearch.trim()"
+                :disabled="searching || !orderNumberSearch.trim()"
                 class="search-btn"
             >
               {{ searching ? 'Searching...' : 'Search' }}
@@ -363,8 +366,8 @@ function formatCurrency(amount: number | null | undefined): string {
       <h4>Order Details</h4>
       <div class="order-info">
         <div class="info-row">
-          <span class="label">Order ID:</span>
-          <span class="value">{{ selectedOrder.id }}</span>
+          <span class="label">Order Number:</span>
+          <span class="value">{{ selectedOrder.orderNumber }}</span>
         </div>
         <div class="info-row">
           <span class="label">Order Date:</span>

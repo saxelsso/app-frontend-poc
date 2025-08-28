@@ -98,7 +98,7 @@ onMounted(() => {
       >
         <div class="order-header">
           <div class="order-info">
-            <div class="order-id">Order #{{ order.id }}</div>
+            <div class="order-id">Order #{{ order.orderNumber ?? order.id }}</div>
             <div class="order-date">{{ formatDate(order.orderDate) }}</div>
           </div>
           <div class="order-summary">

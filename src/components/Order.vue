@@ -250,6 +250,16 @@ function findInventoryByProductId(productId: string) {
   return found || null;
 }
 
+function generateShortOrderId(): string {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(2, 10).replace(/-/g, ''); // YYMMDD format
+  const timeComponent = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0'); // HHMM
+  const randomComponent = Math.floor(Math.random() * 10000).toString().padStart(4, '0'); // 0000-9999 (much larger range)
+
+  return `${dateStr}-${timeComponent}${randomComponent}`; // Format: YYMMDD-HHMMRRRR
+}
+
+
 // Submit order
 async function submitOrder() {
   if (!validate()) return;
@@ -278,8 +288,12 @@ async function submitOrder() {
 
     console.log('📋 Prepared order items:', prepared);
 
+    // Generate a short, user-friendly order number
+    const orderNumber = generateShortOrderId();
+
     // Create the Order
     const orderRes = await client.models.Order.create({
+      orderNumber,
       orderDate: Date.now(),
       status: 'completed',
       totalAmount: +prepared.reduce((sum, i) => sum + i.subtotal, 0).toFixed(2),
@@ -291,7 +305,7 @@ async function submitOrder() {
       return;
     }
 
-    console.log(`📝 Created order with ID: ${orderId}`);
+    console.log(`📝 Created order with ID: ${orderId} and order number: ${orderNumber}`);
 
     // Create OrderItems and update inventory for each line
     console.log('🔄 Processing inventory updates...');
@@ -343,7 +357,7 @@ async function submitOrder() {
     }
 
     console.log('🎉 All inventory updates completed!');
-    formSuccess.value = `Order ${orderId} placed successfully.`;
+    formSuccess.value = `Order ${orderNumber} placed successfully.`;
     resetForm();
 
     // Refresh inventory to reflect new stock levels
