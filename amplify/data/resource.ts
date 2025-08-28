@@ -61,6 +61,7 @@ const schema = a.schema({
     // Order table to track sold products with timestamps
     Order: a
         .model({
+            orderNumber: a.string(),
             orderDate: a.timestamp().required(),
             totalAmount: a.float(),
             status: a.string(), // e.g., 'pending', 'completed', 'cancelled'
