@@ -336,6 +336,39 @@ function listOrders() {
   });
 }
 
+// Invite User state and logic
+const showInviteDialog = ref(false);
+const inviteUserName = ref('');
+const inviteGroupName = ref('');
+const inviteResponse = ref('');
+
+function openInviteDialog() {
+  showInviteDialog.value = true;
+  inviteUserName.value = '';
+  inviteGroupName.value = '';
+  inviteResponse.value = '';
+}
+
+function closeInviteDialog() {
+  showInviteDialog.value = false;
+}
+
+async function submitInviteUser() {
+  if (!inviteUserName.value || !inviteGroupName.value) {
+    inviteResponse.value = 'Please enter both username and group.';
+    return;
+  }
+  try {
+    const result = await client.mutations.inviteUser({
+      invitedUser: inviteUserName.value,
+      groupName: inviteGroupName.value,
+    });
+    inviteResponse.value = result.data ?? 'No response.';
+  } catch (err) {
+    inviteResponse.value = 'Error: ' + (err instanceof Error ? err.message : String(err));
+  }
+}
+
 function listOrderItems() {
   client.models.OrderItem.observeQuery().subscribe({
     next: ({ items }) => {
@@ -386,6 +419,33 @@ onMounted(async () => {
         <div class="stat-label">Average Order Value</div>
       </div>
 
+    </div>
+
+    <!-- Invite User Button -->
+    <div style="margin-bottom: 24px;">
+      <button @click="openInviteDialog" class="btn btn-primary">Invite User</button>
+    </div>
+
+    <!-- Invite User Dialog -->
+    <div v-if="showInviteDialog" class="invite-dialog-overlay">
+      <div class="invite-dialog">
+        <h4>Invite User</h4>
+        <label>
+          Username:
+          <input v-model="inviteUserName" type="text" placeholder="Enter username" />
+        </label>
+        <label>
+          Group Name:
+          <input v-model="inviteGroupName" type="text" placeholder="Enter group name" />
+        </label>
+        <div style="margin-top: 12px;">
+          <button @click="submitInviteUser" class="btn btn-primary">Send Invite</button>
+          <button @click="closeInviteDialog" class="btn btn-secondary" style="margin-left:8px;">Cancel</button>
+        </div>
+        <div v-if="inviteResponse" style="margin-top: 16px; color: #16a34a; font-weight: 500;">
+          {{ inviteResponse }}
+        </div>
+      </div>
     </div>
 
 
@@ -465,6 +525,44 @@ onMounted(async () => {
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-bottom: 16px;
+}
+
+/* Invite User Dialog Styles */
+.invite-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.invite-dialog {
+  background: #fff;
+  padding: 32px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  min-width: 320px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.invite-dialog label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.invite-dialog input {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1em;
 }
 
 .stat-card {

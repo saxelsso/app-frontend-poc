@@ -123,7 +123,7 @@ const schema = a.schema({
         .identifier(['date']),
 
     inviteUser: a
-        .query()
+        .mutation()
         .arguments({
             invitedUser: a.string(),
             groupName: a.string(),
