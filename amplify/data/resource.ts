@@ -1,5 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
-
+import { inviteUser } from "../functions/invite-user/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -122,6 +122,17 @@ const schema = a.schema({
         .authorization(allow => [allow.owner()])
         .identifier(['date']),
 
+    inviteUser: a
+        .query()
+        .arguments({
+            invitedUser: a.string(),
+            groupName: a.string(),
+        })
+        .returns(a.string())
+        .authorization(allow => [
+            allow.authenticated(),  
+        ])
+        .handler(a.handler.function(inviteUser)),
 
 });
 
