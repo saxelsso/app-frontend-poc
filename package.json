@@ -25,7 +25,9 @@
   "devDependencies": {
     "@aws-amplify/backend": "^1.16.1",
     "@aws-amplify/backend-cli": "^1.7.1",
+    "@aws-sdk/client-cognito-identity-provider": "^3.882.0",
     "@tsconfig/node20": "^20.1.5",
+    "@types/aws-lambda": "^8.10.152",
     "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^22.15.17",
     "@vitejs/plugin-vue": "^5.2.4",
