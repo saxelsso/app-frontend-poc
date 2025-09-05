@@ -11,7 +11,10 @@ export const handler: Schema["inviteUser"]["functionHandler"] = async (event, co
 
     const { invitedUser, groupName } = event.arguments;
 
-    const userPoolId = process.env.USER_POOL_ID || "eu-north-1_Vr3rKeWdS"; 
+    const userPoolId = process.env.USER_POOL_ID;
+    if (!userPoolId) {
+        throw new Error("USER_POOL_ID environment variable is not set.");
+    }
 
     if (typeof invitedUser !== "string") {
         throw new Error("invitedUser must be a string");
