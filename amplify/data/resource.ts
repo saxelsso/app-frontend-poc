@@ -1,12 +1,12 @@
-import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { type ClientSchema, a, defineData, defineFunction } from "@aws-amplify/backend";
 import { inviteUser } from "../functions/invite-user/resource";
 
-/*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any user authenticated via an API key can "create", "read",
-"update", and "delete" any "Todo" records.
-=========================================================================*/
+const echoServiceFn = defineFunction({
+    name: 'echoService',
+    entry: '../functions/echo-service/handler.ts',
+    runtime: 22
+});
+
 const schema = a.schema({
   Todo: a
     .model({
@@ -133,6 +133,16 @@ const schema = a.schema({
             allow.authenticated(),  
         ])
         .handler(a.handler.function(inviteUser)),
+    echoService: a
+        .mutation()
+        .arguments({
+            echoString: a.string()
+        })
+        .returns(a.string())
+        .authorization(allow => [
+            allow.authenticated(),
+        ])
+        .handler(a.handler.function(echoServiceFn)),
 
 });
 
@@ -147,5 +157,6 @@ export const data: ReturnType<typeof defineData> = defineData({
       expiresInDays: 30,
     },
   },
+    functions: { echoServiceFn },
 });
 
