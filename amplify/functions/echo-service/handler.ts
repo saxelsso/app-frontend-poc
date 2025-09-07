@@ -1,4 +1,5 @@
 import type { Schema } from "../../data/resource"
+import { env } from '$amplify//env/echo-service';
 
 export const handler: Schema["echoService"]["functionHandler"] = async (event) => {
     // arguments typed from `.arguments()`

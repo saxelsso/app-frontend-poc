@@ -13,7 +13,12 @@ function listTodos() {
     next: ({ items, isSynced }) => {
       todos.value = items
      },
-  }); 
+  });
+
+  const response = client.mutations.echoService({
+    echoString: "Amplify",
+  });
+  console.log(response);
 }
 
 function createTodo() {
