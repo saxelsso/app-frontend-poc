@@ -1,8 +1,7 @@
 import { type ClientSchema, a, defineData, defineFunction } from "@aws-amplify/backend";
 
 const echoServiceFn = defineFunction({
-    name: 'echoService',
-    entry: '../functions/echo-service/handler.ts',
+    entry: '../functions/echo-service.ts',
     runtime: 22
 });
 
@@ -132,7 +131,10 @@ const schema = a.schema({
         ])
         .handler(a.handler.function(echoServiceFn)),
 
-});
+    })
+    .authorization(allow => [
+        allow.resource(echoServiceFn).to(['query', 'listen'])
+    ]);
 
 export type Schema = ClientSchema<typeof schema>;
 
