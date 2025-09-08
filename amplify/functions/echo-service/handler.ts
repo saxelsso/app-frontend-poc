@@ -30,8 +30,8 @@ export const handler: Schema["echoService"]["functionHandler"] = async (event) =
     // arguments typed from `.arguments()`
     const { echoString } = event.arguments
 
-    const todos = await client.models.Todo.list() // use this Data client for CRUDL requests
-    console.log("Todos in the database:", todos);
+    const notes = await client.models.Notes.list()
+    console.log("Notes in the database:", notes);
 
     return `Hello, ${echoString}!`
 }
