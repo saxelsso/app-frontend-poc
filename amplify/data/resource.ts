@@ -1,5 +1,5 @@
 import { type ClientSchema, a, defineData, defineFunction } from "@aws-amplify/backend";
-import { inviteUser } from "../functions/invite-user/resource";
+//import { inviteUser } from "../functions/invite-user/resource";
 
 const echoServiceFn = defineFunction({
     name: 'echoService',
@@ -121,7 +121,7 @@ const schema = a.schema({
         })
         .authorization(allow => [allow.owner()])
         .identifier(['date']),
-
+/**
     inviteUser: a
         .mutation()
         .arguments({
@@ -132,7 +132,7 @@ const schema = a.schema({
         .authorization(allow => [
             allow.authenticated(),  
         ])
-        .handler(a.handler.function(inviteUser)),
+        .handler(a.handler.function(inviteUser)), */
     echoService: a
         .mutation()
         .arguments({
