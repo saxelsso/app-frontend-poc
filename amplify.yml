@@ -27,4 +27,5 @@ frontend:
   cache:
     paths:
       - .npm/**/*
+      - .amplify/**/*
       - node_modules/**/*

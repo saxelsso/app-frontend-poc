@@ -359,11 +359,12 @@ async function submitInviteUser() {
     return;
   }
   try {
-    const result = await client.mutations.inviteUser({
-      invitedUser: inviteUserName.value,
-      groupName: inviteGroupName.value,
-    });
-    inviteResponse.value = result.data ?? 'No response.';
+    //const result = await client.mutations.inviteUser({
+    //  invitedUser: inviteUserName.value,
+    //  groupName: inviteGroupName.value,
+    //});
+
+    inviteResponse.value = 'nothing'; //result.data ?? 'No response.';
   } catch (err) {
     inviteResponse.value = 'Error: ' + (err instanceof Error ? err.message : String(err));
   }

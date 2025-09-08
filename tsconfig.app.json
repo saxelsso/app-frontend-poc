@@ -1,7 +1,7 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "amplify/**/*", "amplify/data/resource.ts"],
-  "exclude": ["src/**/__tests__/*","amplify/functions/echo-service/handler.ts"],
+  "exclude": ["src/**/__tests__/*","amplify/functions/echo-service/handler.ts", "amplify/functions/invite-user/handler.ts"],
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
