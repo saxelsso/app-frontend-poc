@@ -1,4 +1,34 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+import jsPDF from 'jspdf';
+
+async function sharePage() {
+  // Generate a simple PDF receipt
+  const doc = new jsPDF();
+  doc.text('Receipt', 10, 10);
+  doc.text('Date: ' + new Date().toLocaleString(), 10, 20);
+  doc.text('Amount: $42.00', 10, 30);
+  doc.text('Thank you for your purchase!', 10, 40);
+
+  // Convert PDF to Blob
+  const pdfBlob = doc.output('blob');
+  const file = new File([pdfBlob], 'receipt.pdf', { type: 'application/pdf' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Your Receipt',
+        text: 'Here is your receipt as a PDF.',
+        files: [file],
+      });
+    } catch (error) {
+      console.error('Share failed:', error);
+    }
+  } else {
+    alert('PDF sharing is not supported on this device/browser.');
+  }
+}
+
 </script>
 
 <template>
@@ -13,6 +43,14 @@
     <v-row class="mt-8">
       <v-col cols="12">
         <v-card>
+            <v-row class="mb-4">
+              <v-col cols="12" class="d-flex justify-end">
+                <v-btn color="secondary" @click="sharePage">
+                  <v-icon left>mdi-share-variant</v-icon>
+                  Share This Page
+                </v-btn>
+              </v-col>
+            </v-row>
           <v-card-title>
             <h2>About This Project</h2>
           </v-card-title>
