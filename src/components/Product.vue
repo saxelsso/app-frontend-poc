@@ -29,6 +29,9 @@ const products = ref<Array<Schema['Product']["type"]>>([]);
 // Timeout ID for cleanup
 const successMessageTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
+// Constants
+const SUCCESS_MESSAGE_DURATION = 3000; // milliseconds
+
 // Scanner event handlers
 const openBarcodeScanner = () => {
   showScanner.value = true;
@@ -53,7 +56,7 @@ function showSuccessMessage(message: string) {
   successMessageTimeout.value = setTimeout(() => {
     successMessage.value = '';
     successMessageTimeout.value = null;
-  }, 3000);
+  }, SUCCESS_MESSAGE_DURATION);
 }
 
 function listProducts() {
@@ -246,8 +249,8 @@ onUnmounted(() => {
 
 <template>
   <div class="products-container">
-    <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
-    <div v-if="listError" class="error-message">{{ listError }}</div>
+    <div v-if="successMessage" class="success-message" role="alert" aria-live="polite">{{ successMessage }}</div>
+    <div v-if="listError" class="error-message" role="alert" aria-live="assertive">{{ listError }}</div>
     <button @click="toggleForm" v-if="!showForm">+ Add Product</button>
 
     <div v-if="showForm" class="form-container">
@@ -326,7 +329,7 @@ onUnmounted(() => {
         ></v-checkbox>
       </div>
 
-      <div v-if="formError" class="error-message">{{ formError }}</div>
+      <div v-if="formError" class="error-message" role="alert" aria-live="assertive">{{ formError }}</div>
 
       <div class="form-actions">
         <button @click="handleSave" class="submit-btn">
