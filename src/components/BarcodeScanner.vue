@@ -18,19 +18,27 @@ const emit = defineEmits<{
 // Reactive state
 const isScanning = ref(false);
 const errorMessage = ref<string>('');
+const errorType = ref<'error' | 'warning' | 'info'>('error');
 const scannerContainer = ref<HTMLElement | null>(null);
 const isInitialized = ref(false);
+
+// Error message helper function
+const setError = (message: string, type: 'error' | 'warning' | 'info' = 'error') => {
+  errorMessage.value = message;
+  errorType.value = type;
+};
 
 // Start the barcode scanner
 const startScanner = async () => {
   try {
     errorMessage.value = '';
+    errorType.value = 'error';
     isScanning.value = true;
 
     await nextTick(); // Wait for DOM updates
 
     if (!scannerContainer.value) {
-      errorMessage.value = 'Scanner container not found';
+      setError('Failed to initialize scanner: The camera container element is not available. Please try closing and reopening the scanner.', 'error');
       isScanning.value = false;
       return;
     }
@@ -72,7 +80,25 @@ const startScanner = async () => {
       Quagga.init(config, (err: any) => {
         if (err) {
           console.error('Error initializing Quagga:', err);
-          errorMessage.value = `Error initializing scanner: ${err.message || err}`;
+          
+          // Provide detailed error messages based on error type
+          let detailedMessage = 'Failed to initialize the barcode scanner';
+          
+          if (err.name === 'NotAllowedError' || err.message?.includes('Permission denied')) {
+            detailedMessage = 'Camera access denied. Please grant camera permissions in your browser settings and try again.';
+          } else if (err.name === 'NotFoundError' || err.message?.includes('not found')) {
+            detailedMessage = 'No camera detected. Please ensure your device has a camera and it is properly connected.';
+          } else if (err.name === 'NotReadableError' || err.message?.includes('in use')) {
+            detailedMessage = 'Camera is already in use by another application. Please close other apps using the camera and try again.';
+          } else if (err.name === 'OverconstrainedError') {
+            detailedMessage = 'Camera does not meet the required specifications. Try using a different camera or device.';
+          } else if (err.name === 'TypeError' || err.message?.includes('constraints')) {
+            detailedMessage = 'Invalid camera configuration. Please try again or contact support if the issue persists.';
+          } else if (err.message) {
+            detailedMessage = `Scanner initialization failed: ${err.message}`;
+          }
+          
+          setError(detailedMessage, 'error');
           reject(err);
           return;
         }
@@ -94,9 +120,24 @@ const startScanner = async () => {
       });
     });
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : 'Failed to start scanner';
     console.error('Error starting scanner:', error);
-    errorMessage.value = errorMsg;
+    
+    // Provide user-friendly error messages
+    let errorMsg = 'An unexpected error occurred while starting the scanner';
+    
+    if (error instanceof Error) {
+      if (error.name === 'NotAllowedError') {
+        errorMsg = 'Camera permission was denied. Please allow camera access in your browser settings.';
+      } else if (error.name === 'NotFoundError') {
+        errorMsg = 'No camera found on this device. Please connect a camera and try again.';
+      } else if (error.name === 'NotReadableError') {
+        errorMsg = 'Cannot access camera - it may be in use by another application.';
+      } else if (error.message) {
+        errorMsg = `Scanner error: ${error.message}`;
+      }
+    }
+    
+    setError(errorMsg, 'error');
     isScanning.value = false;
     throw error;
   }
@@ -104,11 +145,18 @@ const startScanner = async () => {
 
 // Stop the barcode scanner
 const stopScanner = () => {
-  if (isInitialized.value) {
-    Quagga.stop();
+  try {
+    if (isInitialized.value) {
+      Quagga.stop();
+      isInitialized.value = false;
+    }
+    isScanning.value = false;
+  } catch (error) {
+    console.error('Error stopping scanner:', error);
+    // Non-critical error - scanner will be cleaned up but log for debugging
     isInitialized.value = false;
+    isScanning.value = false;
   }
-  isScanning.value = false;
 };
 
 // Close scanner and emit close event
@@ -120,18 +168,35 @@ const closeScanner = () => {
 
 // Check if the device supports camera
 const checkCameraSupport = () => {
-  if (typeof window === 'undefined' || !window.navigator?.mediaDevices?.getUserMedia) {
-    errorMessage.value = 'Camera access is not supported on this device';
+  if (typeof window === 'undefined') {
+    setError('Scanner cannot run in this environment. Camera access requires a browser environment.', 'error');
     return false;
   }
+  
+  if (!window.navigator?.mediaDevices) {
+    setError('Camera API is not available. Please ensure you are using HTTPS or localhost, and your browser supports camera access.', 'error');
+    return false;
+  }
+  
+  if (!window.navigator.mediaDevices.getUserMedia) {
+    setError('Your browser does not support camera access. Please update your browser or use a modern browser like Chrome, Firefox, or Safari.', 'error');
+    return false;
+  }
+  
   return true;
 };
 
 // Watch for show prop changes
 const handleShowChange = async () => {
-  if (props.show && checkCameraSupport()) {
-    await startScanner();
-  } else if (!props.show) {
+  try {
+    if (props.show && checkCameraSupport()) {
+      await startScanner();
+    } else if (!props.show) {
+      stopScanner();
+    }
+  } catch (error) {
+    console.error('Error handling scanner visibility change:', error);
+    // Error already handled in startScanner, just ensure scanner is stopped
     stopScanner();
   }
 };
@@ -199,10 +264,12 @@ watch(() => props.show, handleShowChange);
           <!-- Error Messages -->
           <v-alert
               v-if="errorMessage"
-              type="error"
+              :type="errorType"
               class="mt-4"
               border="start"
               density="compact"
+              closable
+              @click:close="errorMessage = ''"
           >
             {{ errorMessage }}
           </v-alert>
