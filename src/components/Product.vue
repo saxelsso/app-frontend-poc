@@ -16,6 +16,8 @@ const isSellable = ref<boolean>(false);
 const showForm = ref<boolean>(false);
 const formError = ref<string>('');
 const showScanner = ref<boolean>(false);
+const successMessage = ref<string>('');
+const listError = ref<string>('');
 
 // Edit mode state
 const editingProduct = ref<Schema['Product']["type"] | null>(null);
@@ -38,12 +40,30 @@ const handleScannerClosed = () => {
   showScanner.value = false;
 };
 
+// Auto-dismiss success message after 3 seconds
+function showSuccessMessage(message: string) {
+  successMessage.value = message;
+  setTimeout(() => {
+    successMessage.value = '';
+  }, 3000);
+}
+
 function listProducts() {
-  client.models.Product.observeQuery().subscribe({
-    next: ({ items, isSynced }) => {
-      products.value = items;
-    },
-  });
+  try {
+    client.models.Product.observeQuery().subscribe({
+      next: ({ items, isSynced }) => {
+        products.value = items;
+        listError.value = '';
+      },
+      error: (error) => {
+        console.error('Error fetching products:', error);
+        listError.value = 'Failed to load products. Please refresh the page.';
+      },
+    });
+  } catch (error) {
+    console.error('Error setting up product subscription:', error);
+    listError.value = 'Failed to initialize product list. Please refresh the page.';
+  }
 }
 
 function generateProductId(): string {
@@ -54,25 +74,31 @@ function generateProductId(): string {
 }
 
 function validateForm(): boolean {
-  if (!isEditMode.value && !productId.value.trim()) {
-    formError.value = 'Product ID is required';
+  try {
+    if (!isEditMode.value && !productId.value.trim()) {
+      formError.value = 'Product ID is required';
+      return false;
+    }
+    if (!productName.value.trim()) {
+      formError.value = 'Product name is required';
+      return false;
+    }
+    if (listPrice.value === null || isNaN(listPrice.value) || listPrice.value <= 0) {
+      formError.value = 'List price must be a positive number';
+      return false;
+    }
+    const barcodeValidation = isValidBarcode(barcode.value);
+    if (!barcodeValidation.valid) {
+      formError.value = barcodeValidation.error;
+      return false;
+    }
+    formError.value = '';
+    return true;
+  } catch (error) {
+    console.error('Error validating form:', error);
+    formError.value = 'An error occurred while validating the form. Please try again.';
     return false;
   }
-  if (!productName.value.trim()) {
-    formError.value = 'Product name is required';
-    return false;
-  }
-  if (listPrice.value === null || isNaN(listPrice.value) || listPrice.value <= 0) {
-    formError.value = 'List price must be a positive number';
-    return false;
-  }
-  const barcodeValidation = isValidBarcode(barcode.value);
-  if (!barcodeValidation.valid) {
-    formError.value = barcodeValidation.error;
-    return false;
-  }
-  formError.value = '';
-  return true;
 }
 
 function createProduct() {
@@ -81,6 +107,10 @@ function createProduct() {
   // Generate ID if not provided (for new products)
   const finalProductId = productId.value || generateProductId();
 
+  // Clear previous messages
+  formError.value = '';
+  successMessage.value = '';
+
   client.models.Product.create({
     productId: finalProductId,
     productName: productName.value,
@@ -88,6 +118,8 @@ function createProduct() {
     barcode: barcode.value || undefined, // Send undefined if empty to let it be optional
     isSellable: isSellable.value,
   }).then(() => {
+    console.log('Product created successfully:', finalProductId);
+    showSuccessMessage('Product created successfully!');
     // After creating a new product, update the list
     listProducts();
     // Reset form
@@ -95,9 +127,12 @@ function createProduct() {
     // Hide form
     showForm.value = false;
   }).catch((error) => {
+    console.error('Error creating product:', error);
     // Handle potential duplicate productId error
     if (error.errors && error.errors.some((e: any) => e.errorType === 'DynamoDB:ConditionalCheckFailedException')) {
       formError.value = 'Product ID already exists. Please use a different ID.';
+    } else if (error.message) {
+      formError.value = `Failed to create product: ${error.message}`;
     } else {
       formError.value = 'Failed to create product. Please try again.';
     }
@@ -107,20 +142,33 @@ function createProduct() {
 function updateProduct() {
   if (!validateForm() || !editingProduct.value) return;
 
+  // Clear previous messages
+  formError.value = '';
+  successMessage.value = '';
+
+  const productIdToUpdate = editingProduct.value.productId;
+
   client.models.Product.update({
-    productId: editingProduct.value.productId,
+    productId: productIdToUpdate,
     productName: productName.value,
     listPrice: listPrice.value as number,
     barcode: barcode.value || undefined, // Send undefined if empty to let it be optional
     isSellable: isSellable.value,
   }).then(() => {
+    console.log('Product updated successfully:', productIdToUpdate);
+    showSuccessMessage('Product updated successfully!');
     // After updating, refresh the list
     listProducts();
     // Reset form and exit edit mode
     resetForm();
     showForm.value = false;
   }).catch((error) => {
-    formError.value = 'Failed to update product. Please try again.';
+    console.error('Error updating product:', error);
+    if (error.message) {
+      formError.value = `Failed to update product: ${error.message}`;
+    } else {
+      formError.value = 'Failed to update product. Please try again.';
+    }
   });
 }
 
@@ -160,6 +208,7 @@ function resetForm() {
   barcode.value = '';
   isSellable.value = false;
   formError.value = '';
+  successMessage.value = '';
   editingProduct.value = null;
   isEditMode.value = false;
 }
@@ -187,6 +236,8 @@ onMounted(() => {
 
 <template>
   <div class="products-container">
+    <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
+    <div v-if="listError" class="error-message">{{ listError }}</div>
     <button @click="toggleForm" v-if="!showForm">+ Add Product</button>
 
     <div v-if="showForm" class="form-container">
@@ -426,6 +477,19 @@ input {
 
 .error-message {
   color: #e53e3e;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.success-message {
+  color: #059669;
+  background-color: #d1fae5;
+  border: 1px solid #a7f3d0;
+  padding: 12px;
+  border-radius: 4px;
   margin-bottom: 10px;
 }
 
