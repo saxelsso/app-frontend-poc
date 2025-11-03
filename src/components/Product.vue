@@ -27,7 +27,7 @@ const isEditMode = ref<boolean>(false);
 const products = ref<Array<Schema['Product']["type"]>>([]);
 
 // Timeout ID for cleanup
-let successMessageTimeout: ReturnType<typeof setTimeout> | null = null;
+const successMessageTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
 // Scanner event handlers
 const openBarcodeScanner = () => {
@@ -46,13 +46,13 @@ const handleScannerClosed = () => {
 // Auto-dismiss success message after 3 seconds
 function showSuccessMessage(message: string) {
   // Clear any existing timeout
-  if (successMessageTimeout) {
-    clearTimeout(successMessageTimeout);
+  if (successMessageTimeout.value) {
+    clearTimeout(successMessageTimeout.value);
   }
   successMessage.value = message;
-  successMessageTimeout = setTimeout(() => {
+  successMessageTimeout.value = setTimeout(() => {
     successMessage.value = '';
-    successMessageTimeout = null;
+    successMessageTimeout.value = null;
   }, 3000);
 }
 
@@ -236,8 +236,8 @@ onMounted(() => {
 
 // Clean up timeout on unmount
 onUnmounted(() => {
-  if (successMessageTimeout) {
-    clearTimeout(successMessageTimeout);
+  if (successMessageTimeout.value) {
+    clearTimeout(successMessageTimeout.value);
   }
 });
 </script>
