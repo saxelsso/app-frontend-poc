@@ -134,10 +134,12 @@ function createProduct() {
     // Handle potential duplicate productId error
     if (error.errors && error.errors.some((e: any) => e.errorType === 'DynamoDB:ConditionalCheckFailedException')) {
       formError.value = 'Product ID already exists. Please use a different ID.';
-    } else if (error.message) {
-      formError.value = `Failed to create product: ${error.message}`;
     } else {
       formError.value = 'Failed to create product. Please try again.';
+      // Log detailed error for debugging (visible in console only)
+      if (error.message) {
+        console.error('Create product error details:', error.message);
+      }
     }
   });
 }
@@ -165,10 +167,10 @@ function updateProduct() {
     showForm.value = false;
   }).catch((error) => {
     console.error('Error updating product:', error);
+    formError.value = 'Failed to update product. Please try again.';
+    // Log detailed error for debugging (visible in console only)
     if (error.message) {
-      formError.value = `Failed to update product: ${error.message}`;
-    } else {
-      formError.value = 'Failed to update product. Please try again.';
+      console.error('Update product error details:', error.message);
     }
   });
 }
