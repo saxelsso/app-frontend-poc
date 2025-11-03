@@ -22,17 +22,21 @@ const errorType = ref<'error' | 'warning' | 'info'>('error');
 const scannerContainer = ref<HTMLElement | null>(null);
 const isInitialized = ref(false);
 
-// Error message helper function
+// Error message helper functions
 const setError = (message: string, type: 'error' | 'warning' | 'info' = 'error') => {
   errorMessage.value = message;
   errorType.value = type;
 };
 
+const clearError = () => {
+  errorMessage.value = '';
+  errorType.value = 'error';
+};
+
 // Start the barcode scanner
 const startScanner = async () => {
   try {
-    errorMessage.value = '';
-    errorType.value = 'error';
+    clearError();
     isScanning.value = true;
 
     await nextTick(); // Wait for DOM updates
@@ -269,7 +273,7 @@ watch(() => props.show, handleShowChange);
               border="start"
               density="compact"
               closable
-              @click:close="errorMessage = ''"
+              @click:close="clearError()"
           >
             {{ errorMessage }}
           </v-alert>
