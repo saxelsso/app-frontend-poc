@@ -30,7 +30,9 @@ const products = ref<Array<Schema['Product']["type"]>>([]);
 const successMessageTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
 // Constants
-const SUCCESS_MESSAGE_DURATION = 3000; // milliseconds
+// Duration (in milliseconds) for success messages before they auto-dismiss
+// This provides enough time for users to read the message while keeping the UI clean
+const SUCCESS_MESSAGE_DURATION = 3000;
 
 // Scanner event handlers
 const openBarcodeScanner = () => {
