@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import type { Schema } from '../../amplify/data/resource';
 import { generateClient } from 'aws-amplify/data';
 import { isValidBarcode } from '@/utils/barcodeValidation';
@@ -26,6 +26,9 @@ const isEditMode = ref<boolean>(false);
 // Create a reactive reference to the array of products
 const products = ref<Array<Schema['Product']["type"]>>([]);
 
+// Timeout ID for cleanup
+let successMessageTimeout: ReturnType<typeof setTimeout> | null = null;
+
 // Scanner event handlers
 const openBarcodeScanner = () => {
   showScanner.value = true;
@@ -42,9 +45,14 @@ const handleScannerClosed = () => {
 
 // Auto-dismiss success message after 3 seconds
 function showSuccessMessage(message: string) {
+  // Clear any existing timeout
+  if (successMessageTimeout) {
+    clearTimeout(successMessageTimeout);
+  }
   successMessage.value = message;
-  setTimeout(() => {
+  successMessageTimeout = setTimeout(() => {
     successMessage.value = '';
+    successMessageTimeout = null;
   }, 3000);
 }
 
@@ -141,16 +149,14 @@ function updateProduct() {
   formError.value = '';
   successMessage.value = '';
 
-  const productIdToUpdate = editingProduct.value.productId;
-
   client.models.Product.update({
-    productId: productIdToUpdate,
+    productId: editingProduct.value.productId,
     productName: productName.value,
     listPrice: listPrice.value as number,
     barcode: barcode.value || undefined, // Send undefined if empty to let it be optional
     isSellable: isSellable.value,
   }).then(() => {
-    console.log('Product updated successfully:', productIdToUpdate);
+    console.log('Product updated successfully:', editingProduct.value?.productId);
     showSuccessMessage('Product updated successfully!');
     // After updating, refresh the list
     listProducts();
@@ -226,6 +232,13 @@ function cancelEdit() {
 // Fetch products when the component is mounted
 onMounted(() => {
   listProducts();
+});
+
+// Clean up timeout on unmount
+onUnmounted(() => {
+  if (successMessageTimeout) {
+    clearTimeout(successMessageTimeout);
+  }
 });
 </script>
 
