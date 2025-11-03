@@ -49,21 +49,16 @@ function showSuccessMessage(message: string) {
 }
 
 function listProducts() {
-  try {
-    client.models.Product.observeQuery().subscribe({
-      next: ({ items, isSynced }) => {
-        products.value = items;
-        listError.value = '';
-      },
-      error: (error) => {
-        console.error('Error fetching products:', error);
-        listError.value = 'Failed to load products. Please refresh the page.';
-      },
-    });
-  } catch (error) {
-    console.error('Error setting up product subscription:', error);
-    listError.value = 'Failed to initialize product list. Please refresh the page.';
-  }
+  client.models.Product.observeQuery().subscribe({
+    next: ({ items, isSynced }) => {
+      products.value = items;
+      listError.value = '';
+    },
+    error: (error) => {
+      console.error('Error fetching products:', error);
+      listError.value = 'Failed to load products. Please refresh the page.';
+    },
+  });
 }
 
 function generateProductId(): string {
@@ -74,31 +69,31 @@ function generateProductId(): string {
 }
 
 function validateForm(): boolean {
+  if (!isEditMode.value && !productId.value.trim()) {
+    formError.value = 'Product ID is required';
+    return false;
+  }
+  if (!productName.value.trim()) {
+    formError.value = 'Product name is required';
+    return false;
+  }
+  if (listPrice.value === null || isNaN(listPrice.value) || listPrice.value <= 0) {
+    formError.value = 'List price must be a positive number';
+    return false;
+  }
   try {
-    if (!isEditMode.value && !productId.value.trim()) {
-      formError.value = 'Product ID is required';
-      return false;
-    }
-    if (!productName.value.trim()) {
-      formError.value = 'Product name is required';
-      return false;
-    }
-    if (listPrice.value === null || isNaN(listPrice.value) || listPrice.value <= 0) {
-      formError.value = 'List price must be a positive number';
-      return false;
-    }
     const barcodeValidation = isValidBarcode(barcode.value);
     if (!barcodeValidation.valid) {
       formError.value = barcodeValidation.error;
       return false;
     }
-    formError.value = '';
-    return true;
   } catch (error) {
-    console.error('Error validating form:', error);
-    formError.value = 'An error occurred while validating the form. Please try again.';
+    console.error('Error validating barcode:', error);
+    formError.value = 'An error occurred while validating the barcode. Please try again.';
     return false;
   }
+  formError.value = '';
+  return true;
 }
 
 function createProduct() {
