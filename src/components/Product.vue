@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import type { Schema } from '../../amplify/data/resource';
 import { generateClient } from 'aws-amplify/data';
 import { isValidBarcode } from '@/utils/barcodeValidation';
@@ -16,6 +16,8 @@ const isSellable = ref<boolean>(false);
 const showForm = ref<boolean>(false);
 const formError = ref<string>('');
 const showScanner = ref<boolean>(false);
+const successMessage = ref<string>('');
+const listError = ref<string>('');
 
 // Edit mode state
 const editingProduct = ref<Schema['Product']["type"] | null>(null);
@@ -23,6 +25,14 @@ const isEditMode = ref<boolean>(false);
 
 // Create a reactive reference to the array of products
 const products = ref<Array<Schema['Product']["type"]>>([]);
+
+// Timeout ID for cleanup
+const successMessageTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
+
+// Constants
+// Duration (in milliseconds) for success messages before they auto-dismiss
+// This provides enough time for users to read the message while keeping the UI clean
+const SUCCESS_MESSAGE_DURATION = 3000;
 
 // Scanner event handlers
 const openBarcodeScanner = () => {
@@ -38,10 +48,28 @@ const handleScannerClosed = () => {
   showScanner.value = false;
 };
 
+// Auto-dismiss success message after 3 seconds
+function showSuccessMessage(message: string) {
+  // Clear any existing timeout
+  if (successMessageTimeout.value) {
+    clearTimeout(successMessageTimeout.value);
+  }
+  successMessage.value = message;
+  successMessageTimeout.value = setTimeout(() => {
+    successMessage.value = '';
+    successMessageTimeout.value = null;
+  }, SUCCESS_MESSAGE_DURATION);
+}
+
 function listProducts() {
   client.models.Product.observeQuery().subscribe({
     next: ({ items, isSynced }) => {
       products.value = items;
+      listError.value = '';
+    },
+    error: (error) => {
+      console.error('Error fetching products:', error);
+      listError.value = 'Failed to load products. Please refresh the page.';
     },
   });
 }
@@ -66,9 +94,15 @@ function validateForm(): boolean {
     formError.value = 'List price must be a positive number';
     return false;
   }
-  const barcodeValidation = isValidBarcode(barcode.value);
-  if (!barcodeValidation.valid) {
-    formError.value = barcodeValidation.error;
+  try {
+    const barcodeValidation = isValidBarcode(barcode.value);
+    if (!barcodeValidation.valid) {
+      formError.value = barcodeValidation.error;
+      return false;
+    }
+  } catch (error) {
+    console.error('Error validating barcode:', error);
+    formError.value = 'An error occurred while validating the barcode. Please try again.';
     return false;
   }
   formError.value = '';
@@ -81,6 +115,10 @@ function createProduct() {
   // Generate ID if not provided (for new products)
   const finalProductId = productId.value || generateProductId();
 
+  // Clear previous messages
+  formError.value = '';
+  successMessage.value = '';
+
   client.models.Product.create({
     productId: finalProductId,
     productName: productName.value,
@@ -88,6 +126,8 @@ function createProduct() {
     barcode: barcode.value || undefined, // Send undefined if empty to let it be optional
     isSellable: isSellable.value,
   }).then(() => {
+    console.log('Product created successfully:', finalProductId);
+    showSuccessMessage('Product created successfully!');
     // After creating a new product, update the list
     listProducts();
     // Reset form
@@ -95,17 +135,26 @@ function createProduct() {
     // Hide form
     showForm.value = false;
   }).catch((error) => {
+    console.error('Error creating product:', error);
     // Handle potential duplicate productId error
     if (error.errors && error.errors.some((e: any) => e.errorType === 'DynamoDB:ConditionalCheckFailedException')) {
       formError.value = 'Product ID already exists. Please use a different ID.';
     } else {
       formError.value = 'Failed to create product. Please try again.';
+      // Log detailed error for debugging (visible in console only)
+      if (error.message) {
+        console.error('Create product error details:', error.message);
+      }
     }
   });
 }
 
 function updateProduct() {
   if (!validateForm() || !editingProduct.value) return;
+
+  // Clear previous messages
+  formError.value = '';
+  successMessage.value = '';
 
   client.models.Product.update({
     productId: editingProduct.value.productId,
@@ -114,13 +163,20 @@ function updateProduct() {
     barcode: barcode.value || undefined, // Send undefined if empty to let it be optional
     isSellable: isSellable.value,
   }).then(() => {
+    console.log('Product updated successfully:', editingProduct.value?.productId);
+    showSuccessMessage('Product updated successfully!');
     // After updating, refresh the list
     listProducts();
     // Reset form and exit edit mode
     resetForm();
     showForm.value = false;
   }).catch((error) => {
+    console.error('Error updating product:', error);
     formError.value = 'Failed to update product. Please try again.';
+    // Log detailed error for debugging (visible in console only)
+    if (error.message) {
+      console.error('Update product error details:', error.message);
+    }
   });
 }
 
@@ -160,6 +216,7 @@ function resetForm() {
   barcode.value = '';
   isSellable.value = false;
   formError.value = '';
+  successMessage.value = '';
   editingProduct.value = null;
   isEditMode.value = false;
 }
@@ -183,10 +240,19 @@ function cancelEdit() {
 onMounted(() => {
   listProducts();
 });
+
+// Clean up timeout on unmount
+onUnmounted(() => {
+  if (successMessageTimeout.value) {
+    clearTimeout(successMessageTimeout.value);
+  }
+});
 </script>
 
 <template>
   <div class="products-container">
+    <div v-if="successMessage" class="success-message" role="alert" aria-live="polite">{{ successMessage }}</div>
+    <div v-if="listError" class="error-message" role="alert" aria-live="assertive">{{ listError }}</div>
     <button @click="toggleForm" v-if="!showForm">+ Add Product</button>
 
     <div v-if="showForm" class="form-container">
@@ -265,7 +331,7 @@ onMounted(() => {
         ></v-checkbox>
       </div>
 
-      <div v-if="formError" class="error-message">{{ formError }}</div>
+      <div v-if="formError" class="error-message" role="alert" aria-live="assertive">{{ formError }}</div>
 
       <div class="form-actions">
         <button @click="handleSave" class="submit-btn">
@@ -426,6 +492,19 @@ input {
 
 .error-message {
   color: #e53e3e;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.success-message {
+  color: #059669;
+  background-color: #d1fae5;
+  border: 1px solid #a7f3d0;
+  padding: 12px;
+  border-radius: 4px;
   margin-bottom: 10px;
 }
 
