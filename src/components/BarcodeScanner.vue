@@ -18,12 +18,16 @@ const emit = defineEmits<{
 // Reactive state
 const isScanning = ref(false);
 const errorMessage = ref<string>('');
-const errorType = ref<'error' | 'warning' | 'info'>('error');
+const errorType = ref<'error' | 'warning' | 'info' | 'debug'>('error');
 const scannerContainer = ref<HTMLElement | null>(null);
 const isInitialized = ref(false);
 
 // Error message helper functions
-const setError = (message: string, type: 'error' | 'warning' | 'info' = 'error') => {
+const setError = (message: string, type: 'error' | 'warning' | 'info' | 'debug' = 'error') => {
+  // Debug messages only appear in dev builds
+  if (type === 'debug' && !import.meta.env.DEV) {
+    return;
+  }
   errorMessage.value = message;
   errorType.value = type;
 };
@@ -268,13 +272,15 @@ watch(() => props.show, handleShowChange);
           <!-- Error Messages -->
           <v-alert
               v-if="errorMessage"
-              :type="errorType"
+              :type="errorType === 'debug' ? 'info' : errorType"
               class="mt-4"
+              :class="{ 'debug-alert': errorType === 'debug' }"
               border="start"
               density="compact"
               closable
               @click:close="clearError()"
           >
+            <span v-if="errorType === 'debug'" class="debug-label">[DEBUG]</span>
             {{ errorMessage }}
           </v-alert>
         </div>
@@ -330,5 +336,17 @@ watch(() => props.show, handleShowChange);
   width: 100% !important;
   height: 100% !important;
   object-fit: cover;
+}
+
+/* Debug alert styling */
+.debug-alert {
+  opacity: 0.9;
+  font-family: monospace;
+}
+
+.debug-label {
+  font-weight: bold;
+  margin-right: 8px;
+  color: #1976d2;
 }
 </style>
